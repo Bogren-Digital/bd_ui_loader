@@ -21,3 +21,4 @@ END_JUCE_MODULE_DECLARATION
 #include "src/Components/ImageComponent.h"
 #include "src/Components/KnobComponent.h"
 #include "src/Components/TweenableComponent.h"
+#include "src/Components/RadioButtonGroup.h"
