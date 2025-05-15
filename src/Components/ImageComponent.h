@@ -1,11 +1,12 @@
 #pragma once
 
-class ImageComponent : public juce::Component, public PlayfulTones::ComponentResizer
+class ImageComponent : public juce::Component, public PlayfulTones::ComponentResizer, public OriginalSizeReporter
 {
 public:
-    ImageComponent(const juce::String& name, const juce::Image& imageToUse)
+    ImageComponent(const juce::String& name, const juce::Image& imageToUse, UILoader::ComponentMetadata metadata)
     : juce::Component(name)
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
+    , OriginalSizeReporter(std::move(metadata))
     , image(imageToUse)
     {
         setOpaque(false);

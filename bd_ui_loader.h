@@ -17,5 +17,7 @@ END_JUCE_MODULE_DECLARATION
 #include "BinaryData.h"
 
 #include "src/UILoader.h"
+#include "src/Components/OriginalSizeReporter.h"
 #include "src/Components/ImageComponent.h"
 #include "src/Components/KnobComponent.h"
+#include "src/Components/TweenableComponent.h"

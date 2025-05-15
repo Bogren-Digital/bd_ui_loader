@@ -1,11 +1,12 @@
 #pragma once
 
-class KnobComponent : public juce::Slider, public PlayfulTones::ComponentResizer
+class KnobComponent : public juce::Slider, public PlayfulTones::ComponentResizer, public OriginalSizeReporter
 {
 public:
-    KnobComponent(const juce::String& name,juce::OwnedArray<juce::Image>& imagesToUse)
+    KnobComponent(const juce::String& name,juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata)
     : juce::Slider(name)
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
+    , OriginalSizeReporter(std::move(metadata))
     {
         images.swapWith(imagesToUse); // Transfer ownership of images
         setSliderStyle(juce::Slider::RotaryVerticalDrag);

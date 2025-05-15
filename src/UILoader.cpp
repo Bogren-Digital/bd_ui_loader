@@ -29,10 +29,15 @@ private:
     double aspectRatio;
 };
 
-class PlaceholderComponent : public juce::Component, public PlayfulTones::ComponentResizer
+class PlaceholderComponent  : public juce::Component
+                            , public PlayfulTones::ComponentResizer
+                            , public OriginalSizeReporter
 {
 public:
-    PlaceholderComponent(const juce::String& name) : juce::Component(name), ComponentResizer(*dynamic_cast<juce::Component*>(this))
+    PlaceholderComponent(const juce::String& name, UILoader::ComponentMetadata metadata)
+    : juce::Component(name)
+    , ComponentResizer(*dynamic_cast<juce::Component*>(this))
+    , OriginalSizeReporter(std::move(metadata))
     {
         setOpaque(false);
     }
@@ -105,6 +110,7 @@ void UILoader::parseXML(const juce::String& xmlContent)
         // Get the root element dimensions
         bitmapWidth = xmlDocument->getIntAttribute("width", 0);
         bitmapHeight = xmlDocument->getIntAttribute("height", 0);
+        sourceBounds = juce::Rectangle<float>(0.0f, 0.0f, static_cast<float>(bitmapWidth), static_cast<float>(bitmapHeight));
         
         // Process all child elements
         for (auto* element : xmlDocument->getChildIterator())
@@ -150,10 +156,35 @@ void UILoader::parseXML(const juce::String& xmlContent)
     }
 }
 
+// Helper method to calculate transformed bounds for a component
+juce::Rectangle<float> UILoader::calculateTransformedBounds(
+    const juce::Rectangle<float>& sourceBounds,
+    const juce::Rectangle<float>& targetBounds,
+    const juce::Rectangle<float>& componentSourceBounds)
+{
+    // Get the transform that would map the source bounds to target bounds
+    juce::AffineTransform transform = PlayfulTones::ComponentResizer::getRectTransform(sourceBounds, targetBounds);
+    
+    // Apply the transform to the component's source bounds
+    return componentSourceBounds.transformedBy(transform);
+}
+
 static juce::String getResourceName(const juce::String& filename)
 {
     // Convert filename to BinaryData resource name (e.g., "Background.png" to "Background_png")
     return filename.replaceCharacter('.', '_');
+}
+
+static juce::Image loadImageFromBinaryData(const juce::String& resourceName)
+{
+    // Get the image data from BinaryData
+    int dataSize = 0;
+    const char* imageData = BinaryData::getNamedResource(resourceName.toRawUTF8(), dataSize);
+    
+    // Create image from the binary data
+    return (imageData != nullptr && dataSize > 0) ? 
+           juce::ImageFileFormat::loadFrom(imageData, (size_t)dataSize) : 
+           juce::Image();
 }
 
 void UILoader::createComponent(const ComponentMetadata& metadata)
@@ -164,22 +195,28 @@ void UILoader::createComponent(const ComponentMetadata& metadata)
     
     if (metadata.type == "IMAGE")
     {
-        juce::String resourceName = getResourceName(metadata.file);
-        
-        // Get the image data from BinaryData
-        int dataSize = 0;
-        const char* imageData = BinaryData::getNamedResource(resourceName.toRawUTF8(), dataSize);
-
-        // Create image from the binary data
-        juce::Image image = (imageData != nullptr && dataSize > 0) ? juce::ImageFileFormat::loadFrom(imageData, (size_t)dataSize) : juce::Image();
+        juce::Image image = loadImageFromBinaryData(getResourceName(metadata.file));
             
         // Create the image component with the loaded image
-        component = new ImageComponent(metadata.name, image);
+        component = new ImageComponent(metadata.name, image, metadata);
     }
     else if (metadata.type == "TWEENABLE")
     {
-        // Create tweenable component (placeholder)
-        component = new PlaceholderComponent(metadata.name);
+        juce::Image image = loadImageFromBinaryData(getResourceName(metadata.file));
+            
+        // Create the tweenable component with the loaded image
+        auto tweenableComp = new TweenableComponent(metadata.name, image, metadata);
+        component = tweenableComp;
+        
+        // Set up the callback for position updates when the normalized value changes
+        tweenableComp->onNewPositionNeeded = [this, tweenableComp](float normalizedValue)
+        {
+            juce::ignoreUnused(normalizedValue);
+            applyLayoutToComponent(tweenableComp);
+        };
+        
+        // Initialize with a default value
+        tweenableComp->setNormalizedValue(0.5f);
     }
     else if (metadata.type == "GROUP")
     {
@@ -194,24 +231,14 @@ void UILoader::createComponent(const ComponentMetadata& metadata)
             {
                 // Construct the image name: prefix + index + suffix
                 juce::String imageName = metadata.fileNamePrefix + juce::String(i) + metadata.fileNameSuffix;
-                juce::String resourceName = getResourceName(imageName);
-                
-                // Get the image data from BinaryData
-                int dataSize = 0;
-                const char* imageData = BinaryData::getNamedResource(resourceName.toRawUTF8(), dataSize);
-                
-                // Create image from the binary data and add it to the array
-                if (imageData != nullptr && dataSize > 0)
-                {
-                    auto image = new juce::Image(juce::ImageFileFormat::loadFrom(imageData, (size_t)dataSize));
-                    knobImages.add(image);
-                }
+                juce::Image image = loadImageFromBinaryData(getResourceName(imageName));
+                knobImages.add(new juce::Image(image));
             }
             
             // Create the knob component with the loaded images
             if (knobImages.size() > 0)
             {
-                component = new KnobComponent(metadata.name, knobImages);
+                component = new KnobComponent(metadata.name, knobImages, metadata);
                 
                 // Configure the slider ranges
                 if (auto* knob = dynamic_cast<KnobComponent*>(component))
@@ -223,16 +250,16 @@ void UILoader::createComponent(const ComponentMetadata& metadata)
             else
             {
                 // Fallback if no images could be loaded
-                component = new PlaceholderComponent(metadata.name);
+                component = new PlaceholderComponent(metadata.name, metadata);
             }
         }
         else if (metadata.componentType == "Buttons")
         {
-            component = new PlaceholderComponent(metadata.name);
+            component = new PlaceholderComponent(metadata.name, metadata);
         }
         else
         {
-            component = new PlaceholderComponent(metadata.name);
+            component = new PlaceholderComponent(metadata.name, metadata);
         }
     }
     
@@ -244,43 +271,38 @@ void UILoader::createComponent(const ComponentMetadata& metadata)
     }
 }
 
+void UILoader::applyLayoutToComponent(juce::Component* component)
+{
+    OriginalSizeReporter* originalSizeReporter = dynamic_cast<OriginalSizeReporter*>(component);
+    if (originalSizeReporter != nullptr)
+    {
+        // Get the component's original bounds as a float rectangle
+        juce::Rectangle<float> componentSourceBounds = originalSizeReporter->getComponentSourceBounds();
+        
+        juce::Rectangle<float> transformedBounds = calculateTransformedBounds(
+            sourceBounds, targetBounds, componentSourceBounds);
+        
+        // Check if the component has smooth resizing enabled
+        if (auto* resizer = dynamic_cast<PlayfulTones::ComponentResizer*>(component))
+        {
+            resizer->setTransformedBounds(transformedBounds);
+        }
+    }    
+}
+
 void UILoader::applyLayout()
 {
     // Skip if bitmap dimensions are invalid
     if (bitmapWidth <= 0 || bitmapHeight <= 0)
         return;
-        
-    // Create source rectangle (original bitmap size)
-    juce::Rectangle<float> sourceBounds(0.0f, 0.0f, static_cast<float>(bitmapWidth), static_cast<float>(bitmapHeight));
     
-    // Create target rectangle (current parent component size)
-    juce::Rectangle<float> targetBounds(0.0f, 0.0f, 
-                                       static_cast<float>(parentComponent.getWidth()), 
-                                       static_cast<float>(parentComponent.getHeight()));
+    // Update target rectangle (current parent component size)
+    targetBounds = juce::Rectangle<float> (0.0f, 0.0f, 
+                static_cast<float>(parentComponent.getWidth()), 
+                static_cast<float>(parentComponent.getHeight()));
     
-    // For each component, apply transformed bounds using ComponentResizer
-    for (int i = 0; i < metadataList.size() && i < components.size(); ++i)
+    for (int i = 0; i < components.size(); ++i)
     {
-        auto& metadata = metadataList.getReference(i);
-        
-        // Create the component's original bounds as a float rectangle
-        juce::Rectangle<float> componentSourceBounds(
-            static_cast<float>(metadata.x), 
-            static_cast<float>(metadata.y),
-            static_cast<float>(metadata.width), 
-            static_cast<float>(metadata.height));
-            
-        // Get the transform that would map the source bounds to target bounds
-        juce::AffineTransform transform = PlayfulTones::ComponentResizer::getRectTransform(sourceBounds, targetBounds);
-        
-        // Apply the transform to the component's source bounds
-        juce::Rectangle<float> transformedBounds = componentSourceBounds.transformedBy(transform);
-        
-        // Check if the component has smooth resizing enabled
-        if (auto* resizer = dynamic_cast<PlayfulTones::ComponentResizer*>(components[i]))
-        {
-            // Use ComponentResizer for smooth resizing
-            resizer->setTransformedBounds(transformedBounds);
-        }
+        applyLayoutToComponent(components[i]);
     }
 }

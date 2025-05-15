@@ -12,8 +12,7 @@ public:
     
     // Maintains the aspect ratio of the parent component based on bitmap dimensions
     void applyProportionalResize();
-    
-private:
+
     struct ComponentMetadata
     {
         juce::String type;  // IMAGE, GROUP, TWEENABLE
@@ -38,8 +37,17 @@ private:
                              maxX(0), maxY(0) {}
     };
     
+private:
     void parseXML(const juce::String& xmlContent);
     void createComponent(const ComponentMetadata& metadata);
+    
+    // Helper method to calculate transformed bounds based on scaling
+    static juce::Rectangle<float> calculateTransformedBounds(
+        const juce::Rectangle<float>& sourceBounds,
+        const juce::Rectangle<float>& targetBounds,
+        const juce::Rectangle<float>& componentSourceBounds);
+
+    void applyLayoutToComponent(juce::Component* component);
     
     juce::Component& parentComponent;
     juce::Array<ComponentMetadata> metadataList;
@@ -50,4 +58,7 @@ private:
     // Overall bitmap dimensions from XML root node
     int bitmapWidth = 0;
     int bitmapHeight = 0;
+
+    juce::Rectangle<float> sourceBounds { 0.0f, 0.0f, 0.0f, 0.0f };
+    juce::Rectangle<float> targetBounds { 0.0f, 0.0f, 0.0f, 0.0f };
 };
