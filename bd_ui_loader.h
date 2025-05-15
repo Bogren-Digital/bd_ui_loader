@@ -17,3 +17,4 @@ END_JUCE_MODULE_DECLARATION
 #include "BinaryData.h"
 
 #include "src/UILoader.h"
+#include "src/Components/ImageComponent.h"

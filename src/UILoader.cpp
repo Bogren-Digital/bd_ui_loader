@@ -158,8 +158,18 @@ void UILoader::createComponent(const ComponentMetadata& metadata)
     
     if (metadata.type == "IMAGE")
     {
-        // Create image component (placeholder)
-        component = new PlaceholderComponent(metadata.name);
+        // Convert filename to BinaryData resource name (e.g., "Background.png" to "Background_png")
+        juce::String resourceName = metadata.file.replaceCharacter('.', '_');
+        
+        // Get the image data from BinaryData
+        int dataSize = 0;
+        const char* imageData = BinaryData::getNamedResource(resourceName.toRawUTF8(), dataSize);
+
+        // Create image from the binary data
+        juce::Image image = (imageData != nullptr && dataSize > 0) ? juce::ImageFileFormat::loadFrom(imageData, (size_t)dataSize) : juce::Image();
+            
+        // Create the image component with the loaded image
+        component = new ImageComponent(metadata.name, image);
     }
     else if (metadata.type == "TWEENABLE")
     {
