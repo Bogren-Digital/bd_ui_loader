@@ -34,12 +34,12 @@ class PlaceholderComponent : public juce::Component
 public:
     PlaceholderComponent(const juce::String& name) : juce::Component(name), resizer(*this)
     {
-        setOpaque(true);
+        setOpaque(false);
     }
     
     void paint(juce::Graphics& g) override
     {
-        g.fillAll(juce::Colours::lightgrey);
+        g.fillAll(juce::Colours::lightgrey.withAlpha(0.2f));
         g.setColour(juce::Colours::black);
         g.drawText(getName(), getLocalBounds(), juce::Justification::centred, true);
     }
@@ -48,7 +48,7 @@ public:
     {
         return resizer;
     }
-    
+
 private:
     PlayfulTones::ComponentResizer resizer;
     
@@ -140,6 +140,8 @@ void UILoader::parseXML(const juce::String& xmlContent)
                 metadata.minY = element->getIntAttribute("minY", 0);
                 metadata.maxX = element->getIntAttribute("maxX", 0);
                 metadata.maxY = element->getIntAttribute("maxY", 0);
+                metadata.x = metadata.minX;
+                metadata.y = metadata.minY;
             }
             else if (metadata.type == "GROUP")
             {
@@ -198,10 +200,41 @@ void UILoader::createComponent(const ComponentMetadata& metadata)
 
 void UILoader::applyLayout()
 {
-    // For each component, apply the stored position and size
+    // Skip if bitmap dimensions are invalid
+    if (bitmapWidth <= 0 || bitmapHeight <= 0)
+        return;
+        
+    // Create source rectangle (original bitmap size)
+    juce::Rectangle<float> sourceBounds(0.0f, 0.0f, static_cast<float>(bitmapWidth), static_cast<float>(bitmapHeight));
+    
+    // Create target rectangle (current parent component size)
+    juce::Rectangle<float> targetBounds(0.0f, 0.0f, 
+                                       static_cast<float>(parentComponent.getWidth()), 
+                                       static_cast<float>(parentComponent.getHeight()));
+    
+    // For each component, apply transformed bounds using ComponentResizer
     for (int i = 0; i < metadataList.size() && i < components.size(); ++i)
     {
         auto& metadata = metadataList.getReference(i);
-        components[i]->setBounds(metadata.x, metadata.y, metadata.width, metadata.height);
+        
+        // Create the component's original bounds as a float rectangle
+        juce::Rectangle<float> componentSourceBounds(
+            static_cast<float>(metadata.x), 
+            static_cast<float>(metadata.y),
+            static_cast<float>(metadata.width), 
+            static_cast<float>(metadata.height));
+            
+        // Get the transform that would map the source bounds to target bounds
+        juce::AffineTransform transform = PlayfulTones::ComponentResizer::getRectTransform(sourceBounds, targetBounds);
+        
+        // Apply the transform to the component's source bounds
+        juce::Rectangle<float> transformedBounds = componentSourceBounds.transformedBy(transform);
+        
+        // Check if the component is a PlaceholderComponent and has a resizer
+        if (auto* placeholderComponent = dynamic_cast<PlaceholderComponent*>(components[i]))
+        {
+            // Use ComponentResizer for smooth resizing
+            placeholderComponent->getResizer().setTransformedBounds(transformedBounds);
+        }
     }
 }
