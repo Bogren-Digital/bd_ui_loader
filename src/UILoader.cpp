@@ -1,3 +1,51 @@
+class AspectRatioListener : public juce::ComponentListener
+{
+public:
+    AspectRatioListener(double ratio) : aspectRatio(ratio) {}
+    
+    void componentMovedOrResized (juce::Component& component, bool wasMoved, bool wasResized) override
+    {
+        juce::ignoreUnused(wasMoved);
+        if (! wasResized)
+        {
+            return; // Only handle resize events
+        }
+        
+        // Get current size
+        int width = component.getWidth();
+        int height = component.getHeight();
+        
+        // Calculate the target height based on current width and aspect ratio
+        int targetHeight = static_cast<int>(width / aspectRatio);
+        
+        // If height doesn't match the aspect ratio, adjust it
+        if (height != targetHeight)
+        {
+            component.setSize(width, targetHeight);
+        }
+    }
+    
+private:
+    double aspectRatio;
+};
+
+void UILoader::applyProportionalResize()
+{
+    // Only apply if we have valid bitmap dimensions
+    if (bitmapWidth > 0 && bitmapHeight > 0)
+    {
+        // Initially set parent to the bitmap size
+        parentComponent.setSize(bitmapWidth, bitmapHeight);
+        
+        // Store the aspect ratio for future resizing
+        double aspectRatio = static_cast<double>(bitmapWidth) / static_cast<double>(bitmapHeight);
+        
+        // Create and attach the listener to maintain aspect ratio during resizes
+        aspectRatioListener = std::make_unique<AspectRatioListener>(aspectRatio);
+        parentComponent.addComponentListener(aspectRatioListener.get());
+    }
+}
+
 UILoader::UILoader(juce::Component& parent)
     : parentComponent(parent)
 {
@@ -5,6 +53,10 @@ UILoader::UILoader(juce::Component& parent)
 
 UILoader::~UILoader()
 {
+    if (aspectRatioListener != nullptr)
+    {
+        parentComponent.removeComponentListener(aspectRatioListener.get());
+    }
 }
 
 void UILoader::loadUI()
@@ -14,6 +66,10 @@ void UILoader::loadUI()
         BinaryData::metadata_xml, BinaryData::metadata_xmlSize);
     
     parseXML(xmlContent);
+    
+    // Apply proportional resize constraint based on bitmap dimensions
+    applyProportionalResize();
+    
     applyLayout();
 }
 

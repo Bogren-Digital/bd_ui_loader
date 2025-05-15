@@ -1,4 +1,5 @@
 #pragma once
+class AspectRatioListener;
 
 class UILoader
 {
@@ -8,6 +9,9 @@ public:
     
     void loadUI();
     void applyLayout();
+    
+    // Maintains the aspect ratio of the parent component based on bitmap dimensions
+    void applyProportionalResize();
     
 private:
     struct ComponentMetadata
@@ -40,6 +44,8 @@ private:
     juce::Component& parentComponent;
     juce::Array<ComponentMetadata> metadataList;
     juce::OwnedArray<juce::Component> components;
+    
+    std::unique_ptr<AspectRatioListener> aspectRatioListener;
     
     // Overall bitmap dimensions from XML root node
     int bitmapWidth = 0;
