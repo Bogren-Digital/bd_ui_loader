@@ -18,3 +18,4 @@ END_JUCE_MODULE_DECLARATION
 
 #include "src/UILoader.h"
 #include "src/Components/ImageComponent.h"
+#include "src/Components/KnobComponent.h"

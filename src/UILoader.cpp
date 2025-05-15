@@ -150,6 +150,12 @@ void UILoader::parseXML(const juce::String& xmlContent)
     }
 }
 
+static juce::String getResourceName(const juce::String& filename)
+{
+    // Convert filename to BinaryData resource name (e.g., "Background.png" to "Background_png")
+    return filename.replaceCharacter('.', '_');
+}
+
 void UILoader::createComponent(const ComponentMetadata& metadata)
 {
     // For now, just a placeholder for component creation
@@ -158,8 +164,7 @@ void UILoader::createComponent(const ComponentMetadata& metadata)
     
     if (metadata.type == "IMAGE")
     {
-        // Convert filename to BinaryData resource name (e.g., "Background.png" to "Background_png")
-        juce::String resourceName = metadata.file.replaceCharacter('.', '_');
+        juce::String resourceName = getResourceName(metadata.file);
         
         // Get the image data from BinaryData
         int dataSize = 0;
@@ -178,10 +183,48 @@ void UILoader::createComponent(const ComponentMetadata& metadata)
     }
     else if (metadata.type == "GROUP")
     {
-        // Create group component based on type (placeholder)
+        // Create group component based on type
         if (metadata.componentType == "Knobs")
         {
-            component = new PlaceholderComponent(metadata.name);
+            // Create an array to hold all the knob frame images
+            auto knobImages = juce::OwnedArray<juce::Image>();
+            
+            // Load all frame images
+            for (int i = 0; i < metadata.numberOfFrames; ++i)
+            {
+                // Construct the image name: prefix + index + suffix
+                juce::String imageName = metadata.fileNamePrefix + juce::String(i) + metadata.fileNameSuffix;
+                juce::String resourceName = getResourceName(imageName);
+                
+                // Get the image data from BinaryData
+                int dataSize = 0;
+                const char* imageData = BinaryData::getNamedResource(resourceName.toRawUTF8(), dataSize);
+                
+                // Create image from the binary data and add it to the array
+                if (imageData != nullptr && dataSize > 0)
+                {
+                    auto image = new juce::Image(juce::ImageFileFormat::loadFrom(imageData, (size_t)dataSize));
+                    knobImages.add(image);
+                }
+            }
+            
+            // Create the knob component with the loaded images
+            if (knobImages.size() > 0)
+            {
+                component = new KnobComponent(metadata.name, knobImages);
+                
+                // Configure the slider ranges
+                if (auto* knob = dynamic_cast<KnobComponent*>(component))
+                {
+                    knob->setRange(0.0, 1.0);
+                    knob->setValue(0.5, juce::dontSendNotification);
+                }
+            }
+            else
+            {
+                // Fallback if no images could be loaded
+                component = new PlaceholderComponent(metadata.name);
+            }
         }
         else if (metadata.componentType == "Buttons")
         {
