@@ -40,4 +40,8 @@ private:
     juce::Component& parentComponent;
     juce::Array<ComponentMetadata> metadataList;
     juce::OwnedArray<juce::Component> components;
+    
+    // Overall bitmap dimensions from XML root node
+    int bitmapWidth = 0;
+    int bitmapHeight = 0;
 };

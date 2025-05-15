@@ -27,6 +27,10 @@ void UILoader::parseXML(const juce::String& xmlContent)
         metadataList.clear();
         components.clear();
         
+        // Get the root element dimensions
+        bitmapWidth = xmlDocument->getIntAttribute("width", 0);
+        bitmapHeight = xmlDocument->getIntAttribute("height", 0);
+        
         // Process all child elements
         for (auto* element : xmlDocument->getChildIterator())
         {
