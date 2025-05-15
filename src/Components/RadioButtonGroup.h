@@ -4,6 +4,21 @@ class RadioButtonGroup : public juce::Component,
                          public PlayfulTones::ComponentResizer, 
                          public OriginalSizeReporter
 {
+private:
+    // Custom LookAndFeel that makes toggle buttons invisible
+    class InvisibleToggleLookAndFeel : public juce::LookAndFeel_V4
+    {
+    public:
+        InvisibleToggleLookAndFeel() = default;
+        
+        void drawToggleButton(juce::Graphics& g, juce::ToggleButton& button,
+                             bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
+        {
+            // Do nothing - this makes the toggle button completely invisible
+            juce::ignoreUnused(g, button, shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+        }
+    };
+    
 public:
     RadioButtonGroup(const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata)
     : juce::Component(name)
@@ -18,6 +33,7 @@ public:
             auto* button = new juce::ToggleButton(name + "_" + juce::String(i));
             button->setRadioGroupId(1); // All buttons in the same radio group
             button->onClick = [this, i] { setSelectedButtonIndex(i); };
+            button->setLookAndFeel(&invisibleLookAndFeel); // Apply the invisible look and feel
             addAndMakeVisible(button);
             buttons.add(button);
         }
@@ -30,6 +46,15 @@ public:
         }
         
         setOpaque(false);
+    }
+    
+    ~RadioButtonGroup() override
+    {
+        // Make sure to reset the LookAndFeel for each button to avoid dangling pointers
+        for (auto* button : buttons)
+        {
+            button->setLookAndFeel(nullptr);
+        }
     }
     
     void resized() override
@@ -94,6 +119,7 @@ public:
     }
     
 private:
+    InvisibleToggleLookAndFeel invisibleLookAndFeel;
     juce::OwnedArray<juce::Image> images;
     juce::OwnedArray<juce::ToggleButton> buttons;
     int selectedButtonIndex = -1;
