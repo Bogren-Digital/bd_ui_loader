@@ -29,10 +29,10 @@ private:
     double aspectRatio;
 };
 
-class PlaceholderComponent : public juce::Component
+class PlaceholderComponent : public juce::Component, public PlayfulTones::ComponentResizer
 {
 public:
-    PlaceholderComponent(const juce::String& name) : juce::Component(name), resizer(*this)
+    PlaceholderComponent(const juce::String& name) : juce::Component(name), ComponentResizer(*dynamic_cast<juce::Component*>(this))
     {
         setOpaque(false);
     }
@@ -44,14 +44,7 @@ public:
         g.drawText(getName(), getLocalBounds(), juce::Justification::centred, true);
     }
 
-    PlayfulTones::ComponentResizer& getResizer()
-    {
-        return resizer;
-    }
-
 private:
-    PlayfulTones::ComponentResizer resizer;
-    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PlaceholderComponent)
 };
 
@@ -230,11 +223,11 @@ void UILoader::applyLayout()
         // Apply the transform to the component's source bounds
         juce::Rectangle<float> transformedBounds = componentSourceBounds.transformedBy(transform);
         
-        // Check if the component is a PlaceholderComponent and has a resizer
-        if (auto* placeholderComponent = dynamic_cast<PlaceholderComponent*>(components[i]))
+        // Check if the component has smooth resizing enabled
+        if (auto* resizer = dynamic_cast<PlayfulTones::ComponentResizer*>(components[i]))
         {
             // Use ComponentResizer for smooth resizing
-            placeholderComponent->getResizer().setTransformedBounds(transformedBounds);
+            resizer->setTransformedBounds(transformedBounds);
         }
     }
 }
