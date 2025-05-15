@@ -29,6 +29,32 @@ private:
     double aspectRatio;
 };
 
+class PlaceholderComponent : public juce::Component
+{
+public:
+    PlaceholderComponent(const juce::String& name) : juce::Component(name), resizer(*this)
+    {
+        setOpaque(true);
+    }
+    
+    void paint(juce::Graphics& g) override
+    {
+        g.fillAll(juce::Colours::lightgrey);
+        g.setColour(juce::Colours::black);
+        g.drawText(getName(), getLocalBounds(), juce::Justification::centred, true);
+    }
+
+    PlayfulTones::ComponentResizer& getResizer()
+    {
+        return resizer;
+    }
+    
+private:
+    PlayfulTones::ComponentResizer resizer;
+    
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PlaceholderComponent)
+};
+
 void UILoader::applyProportionalResize()
 {
     // Only apply if we have valid bitmap dimensions
@@ -138,31 +164,28 @@ void UILoader::createComponent(const ComponentMetadata& metadata)
     if (metadata.type == "IMAGE")
     {
         // Create image component (placeholder)
-        component = new juce::Component();
-        component->setName(metadata.name);
+        component = new PlaceholderComponent(metadata.name);
     }
     else if (metadata.type == "TWEENABLE")
     {
         // Create tweenable component (placeholder)
-        component = new juce::Component();
-        component->setName(metadata.name);
+        component = new PlaceholderComponent(metadata.name);
     }
     else if (metadata.type == "GROUP")
     {
         // Create group component based on type (placeholder)
         if (metadata.componentType == "Knobs")
         {
-            component = new juce::Component();
+            component = new PlaceholderComponent(metadata.name);
         }
         else if (metadata.componentType == "Buttons")
         {
-            component = new juce::Component();
+            component = new PlaceholderComponent(metadata.name);
         }
         else
         {
-            component = new juce::Component();
+            component = new PlaceholderComponent(metadata.name);
         }
-        component->setName(metadata.name);
     }
     
     if (component != nullptr)
