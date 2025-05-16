@@ -1,5 +1,6 @@
 #pragma once
 class AspectRatioListener;
+class ComponentFactory;
 
 class UILoader
 {
@@ -8,7 +9,11 @@ public:
     ~UILoader();
     
     void loadUI();
+    
+    static void registerComponentFactories();
+    
     void applyLayout();
+    void applyLayoutToComponent(juce::Component* component);
     
     // Maintains the aspect ratio of the parent component based on bitmap dimensions
     void applyProportionalResize();
@@ -39,15 +44,12 @@ public:
     
 private:
     void parseXML(const juce::String& xmlContent);
-    void createComponent(const ComponentMetadata& metadata);
     
     // Helper method to calculate transformed bounds based on scaling
     static juce::Rectangle<float> calculateTransformedBounds(
         const juce::Rectangle<float>& sourceBounds,
         const juce::Rectangle<float>& targetBounds,
         const juce::Rectangle<float>& componentSourceBounds);
-
-    void applyLayoutToComponent(juce::Component* component);
     
     juce::Component& parentComponent;
     juce::Array<ComponentMetadata> metadataList;
