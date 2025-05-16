@@ -178,6 +178,7 @@ void UILoader::registerComponentFactories()
     // Register group-based factories
     registry.registerFactory<KnobComponentFactory>("GROUP", "Knobs");
     registry.registerFactory<RadioButtonGroupFactory>("GROUP", "Buttons");
+    registry.registerFactory<SwitchFactory>("GROUP", "Switches");
     
     // Register fallback factory
     registry.registerFactory<PlaceholderComponentFactory>("PLACEHOLDER");

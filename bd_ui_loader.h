@@ -24,6 +24,9 @@ END_JUCE_MODULE_DECLARATION
 #include "src/Components/PlaceholderComponent.h"
 #include "src/Components/TweenableComponent.h"
 #include "src/Components/RadioButtonGroup.h"
+#include "src/Components/SwitchComponent.h"
+
+
 #include "src/Factories/ComponentFactory.h"
 #include "src/Factories/PlaceholderComponentFactory.h"
 #include "src/Factories/ComponentFactoryRegistry.h"
@@ -31,3 +34,4 @@ END_JUCE_MODULE_DECLARATION
 #include "src/Factories/RadioButtonGroupFactory.h"
 #include "src/Factories/TweenableComponentFactory.h"
 #include "src/Factories/ImageComponentFactory.h"
+#include "src/Factories/SwitchFactory.h"
