@@ -49,6 +49,12 @@ void UILoader::applyProportionalResize()
 UILoader::UILoader(juce::Component& parent)
     : parentComponent(parent)
 {
+    // Ensure factories are registered
+    static bool factoriesRegistered = false;
+    if (!factoriesRegistered) {
+        registerComponentFactories();
+        factoriesRegistered = true;
+    }
 }
 
 UILoader::~UILoader()
@@ -129,7 +135,7 @@ void UILoader::parseXML(const juce::String& xmlContent)
             }
             
             metadataList.add(metadata);
-            componentFactories.push_back(createComponentFactory(metadata));
+            componentFactories.push_back(ComponentFactoryRegistry::getInstance().createFactory(metadata, this));
         }
 
         // Create components based on metadata
@@ -161,30 +167,20 @@ juce::Rectangle<float> UILoader::calculateTransformedBounds(
     return componentSourceBounds.transformedBy(transform);
 }
 
-std::unique_ptr<ComponentFactory> UILoader::createComponentFactory(const ComponentMetadata& metadata)
+void UILoader::registerComponentFactories()
 {
-    if (metadata.type == "IMAGE")
-    {
-        return std::make_unique<ImageComponentFactory>(metadata);
-    }
-    else if (metadata.type == "TWEENABLE")
-    {
-        return std::make_unique<TweenableComponentFactory>(metadata, *this);
-    }
-    else if (metadata.type == "GROUP")
-    {
-        // Create group component based on type
-        if (metadata.componentType == "Knobs")
-        {
-            return std::make_unique<KnobComponentFactory>(metadata);
-        }
-        else if (metadata.componentType == "Buttons")
-        {
-            return std::make_unique<RadioButtonGroupFactory>(metadata);
-        }
-    }
+    auto& registry = ComponentFactoryRegistry::getInstance();
     
-    return std::make_unique<PlaceholderComponentFactory>(metadata);
+    // Register basic component factories
+    registry.registerFactory<ImageComponentFactory>("IMAGE");
+    registry.registerFactory<TweenableComponentFactory>("TWEENABLE");
+    
+    // Register group-based factories
+    registry.registerFactory<KnobComponentFactory>("GROUP", "Knobs");
+    registry.registerFactory<RadioButtonGroupFactory>("GROUP", "Buttons");
+    
+    // Register fallback factory
+    registry.registerFactory<PlaceholderComponentFactory>("PLACEHOLDER");
 }
 
 void UILoader::applyLayoutToComponent(juce::Component* component)

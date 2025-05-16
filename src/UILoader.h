@@ -9,6 +9,9 @@ public:
     ~UILoader();
     
     void loadUI();
+    
+    static void registerComponentFactories();
+    
     void applyLayout();
     void applyLayoutToComponent(juce::Component* component);
     
@@ -41,7 +44,6 @@ public:
     
 private:
     void parseXML(const juce::String& xmlContent);
-    std::unique_ptr<ComponentFactory> createComponentFactory(const ComponentMetadata& metadata);
     
     // Helper method to calculate transformed bounds based on scaling
     static juce::Rectangle<float> calculateTransformedBounds(
