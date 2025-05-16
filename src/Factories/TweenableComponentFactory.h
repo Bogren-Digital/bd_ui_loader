@@ -13,12 +13,21 @@ public:
             
         // Create the tweenable component with the loaded image
         TweenableComponent* component = new TweenableComponent(metadata.name, image, metadata);
+        UILoader* uiBuilder = &uiLoader;
         
         // Set up the callback for position updates when the normalized value changes
-        component->onNewPositionNeeded = [this, component](float normalizedValue)
+        component->onNewPositionNeeded = [uiBuilder, component](float normalizedValue)
         {
             juce::ignoreUnused(normalizedValue);
-            uiLoader.applyLayoutToComponent(component);
+
+            if(component != nullptr && uiBuilder != nullptr)
+            {
+                uiBuilder->applyLayoutToComponent(component);
+            }
+            else
+            {
+                jassertfalse; // Component should not be null here
+            }
         };
 
         return component;
