@@ -18,7 +18,6 @@ public:
         {
             // Construct the image name: prefix + index + suffix
             juce::String imageName = metadata.numberOfFrames > 1 ? metadata.fileNamePrefix + juce::String(i) + metadata.fileNameSuffix : metadata.name + metadata.fileNameSuffix;
-            juce::Logger::writeToLog("Loading image: " + imageName);
             juce::Image image = BinaryAssetLoading::loadImageFromBinaryData(BinaryAssetLoading::getResourceName(imageName));
             buttonImages.add(new juce::Image(image));
         }
