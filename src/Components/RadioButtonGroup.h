@@ -79,7 +79,7 @@ public:
         if (selectedButtonIndex >= 0 && selectedButtonIndex < images.size() && 
             images[selectedButtonIndex] != nullptr && images[selectedButtonIndex]->isValid())
         {
-            if (useGuiResampler)
+            if(BogrenDigital::ImageResampler::shouldUseResampling(getLocalBounds(), useGuiResampler))
             {
                 const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
                     *images[selectedButtonIndex], getWidth(), getHeight());

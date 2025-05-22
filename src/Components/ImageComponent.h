@@ -18,7 +18,7 @@ public:
         // Draw the image to fill the entire component bounds
         if (image.isValid())
         {
-            if (useGuiResampler)
+            if(BogrenDigital::ImageResampler::shouldUseResampling(getLocalBounds(), useGuiResampler))
             {
                 const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
                 image, getWidth(), getHeight());

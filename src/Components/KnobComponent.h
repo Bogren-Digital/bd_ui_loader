@@ -23,7 +23,7 @@ public:
         {
             const auto normalizedValue = (getValue() - getMinimum()) / (getMaximum() - getMinimum());
             const auto imageIndex = static_cast<int>(normalizedValue * (images.size() - 1));
-            if (useGuiResampler)
+            if(BogrenDigital::ImageResampler::shouldUseResampling(getLocalBounds(), useGuiResampler))
             {
                 const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
                     *images[imageIndex], getWidth(), getHeight());
