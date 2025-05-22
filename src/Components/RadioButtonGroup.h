@@ -82,7 +82,7 @@ public:
             if(BogrenDigital::ImageResampler::shouldUseResampling(getLocalBounds(), useGuiResampler))
             {
                 const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
-                    *images[selectedButtonIndex], getWidth(), getHeight());
+                    *images[selectedButtonIndex], resamplingMask, getWidth(), getHeight());
                 g.drawImageAt(resampledImage, 0, 0);
             }
             else

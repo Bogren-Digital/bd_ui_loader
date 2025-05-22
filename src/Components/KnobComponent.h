@@ -26,7 +26,7 @@ public:
             if(BogrenDigital::ImageResampler::shouldUseResampling(getLocalBounds(), useGuiResampler))
             {
                 const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
-                    *images[imageIndex], getWidth(), getHeight());
+                    *images[imageIndex], resamplingMask, getWidth(), getHeight());
                 g.drawImageAt(resampledImage, 0, 0);
             }
             else
