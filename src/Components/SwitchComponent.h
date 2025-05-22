@@ -12,6 +12,8 @@ private:
         SwitchLookAndFeel() = default;
         
         void setImages(juce::OwnedArray<juce::Image>* imgs) { images = imgs; }
+        void setMaskImage(juce::Image* mask) { maskImage = mask; }
+        void setResamplingEnabled(bool enabled) { resamplingEnabled = enabled; }
         
         void drawToggleButton(juce::Graphics& g, juce::ToggleButton& button,
                              bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
@@ -25,7 +27,18 @@ private:
                 int imageIndex = button.getToggleState() ? 1 : 0;
                 if (imageIndex < images->size() && (*images)[imageIndex] != nullptr && (*images)[imageIndex]->isValid())
                 {
-                    g.drawImage(*(*images)[imageIndex], button.getLocalBounds().toFloat());
+                    if (BogrenDigital::ImageResampler::shouldUseResampling(button.getLocalBounds(), resamplingEnabled))
+                    {
+                        // Resample the image if needed
+                        auto resampledImage = BogrenDigital::ImageResampler::applyResize(
+                            *(*images)[imageIndex], *maskImage, button.getWidth(), button.getHeight());
+                        g.drawImageAt(resampledImage, 0, 0);
+                    }
+                    else
+                    {
+                        // Draw the image directly without resampling
+                        g.drawImage(*(*images)[imageIndex], button.getLocalBounds().toFloat());
+                    }
                     return;
                 }
             }
@@ -38,18 +51,24 @@ private:
         
     private:
         juce::OwnedArray<juce::Image>* images = nullptr;
+        juce::Image* maskImage = nullptr;
+        bool resamplingEnabled = false;
     };
     
 public:
-    SwitchComponent(const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata)
+    SwitchComponent(const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, 
+                   juce::Image mask)
     : juce::ToggleButton(name)
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
+    , maskImage(std::move(mask))
     {
         images.swapWith(imagesToUse); // Transfer ownership of images
         
         // Set our custom look and feel
         switchLookAndFeel.setImages(&images);
+        switchLookAndFeel.setMaskImage(&maskImage);
+        switchLookAndFeel.setResamplingEnabled(metadata.useGuiResampler);
         setLookAndFeel(&switchLookAndFeel);
         
         // Default state is off (first image)
@@ -67,6 +86,7 @@ public:
 private:
     juce::OwnedArray<juce::Image> images;
     SwitchLookAndFeel switchLookAndFeel;
+    juce::Image maskImage;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SwitchComponent)
 };
