@@ -20,10 +20,11 @@ private:
     };
     
 public:
-    RadioButtonGroup(const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata)
+    RadioButtonGroup(const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, juce::Image maskImage)
     : juce::Component(name)
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
+    , resamplingMask(std::move(maskImage))
     {
         images.swapWith(imagesToUse); // Transfer ownership of images
         
@@ -77,7 +78,9 @@ public:
         if (selectedButtonIndex >= 0 && selectedButtonIndex < images.size() && 
             images[selectedButtonIndex] != nullptr && images[selectedButtonIndex]->isValid())
         {
-            g.drawImage(*images[selectedButtonIndex], getLocalBounds().toFloat());
+            const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
+                *images[selectedButtonIndex], resamplingMask, getWidth(), getHeight());
+            g.drawImageAt(resampledImage, 0, 0);
         }
         else
         {
@@ -119,6 +122,7 @@ public:
     }
     
 private:
+    juce::Image resamplingMask;
     InvisibleToggleLookAndFeel invisibleLookAndFeel;
     juce::OwnedArray<juce::Image> images;
     juce::OwnedArray<juce::ToggleButton> buttons;

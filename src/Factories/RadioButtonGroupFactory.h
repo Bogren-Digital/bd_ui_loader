@@ -9,6 +9,9 @@ public:
     juce::Component* createComponent() override
     {
         juce::Component* component = nullptr;
+
+        const auto maskImageName = metadata.fileNamePrefix + "mask" + metadata.fileNameSuffix;
+        const auto maskImage = BinaryAssetLoading::loadImageFromBinaryData(BinaryAssetLoading::getResourceName(maskImageName));
         
         // Create an array to hold all the button frame images
         auto buttonImages = juce::OwnedArray<juce::Image>();
@@ -25,7 +28,7 @@ public:
         // Create the radio button group component with the loaded images
         if (buttonImages.size() > 0)
         {
-            component = new RadioButtonGroup(metadata.name, buttonImages, metadata);
+            component = new RadioButtonGroup(metadata.name, buttonImages, metadata, maskImage);
         }
         else
         {

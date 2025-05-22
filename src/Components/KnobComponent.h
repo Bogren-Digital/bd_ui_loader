@@ -3,10 +3,11 @@
 class KnobComponent : public juce::Slider, public PlayfulTones::ComponentResizer, public OriginalSizeReporter
 {
 public:
-    KnobComponent(const juce::String& name,juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata)
+    KnobComponent(const juce::String& name,juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, juce::Image maskImage)
     : juce::Slider(name)
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
+    , resamplingMask(std::move(maskImage))
     {
         images.swapWith(imagesToUse); // Transfer ownership of images
         setSliderStyle(juce::Slider::RotaryVerticalDrag);
@@ -21,8 +22,9 @@ public:
         {
             const auto normalizedValue = (getValue() - getMinimum()) / (getMaximum() - getMinimum());
             const auto imageIndex = static_cast<int>(normalizedValue * (images.size() - 1));
-            auto image = images[imageIndex];
-            g.drawImage(*image, getLocalBounds().toFloat());
+            const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
+                *images[imageIndex], resamplingMask, getWidth(), getHeight());
+            g.drawImageAt(resampledImage, 0, 0);
         }
         else
         {
@@ -36,6 +38,7 @@ public:
 
 private:
     juce::OwnedArray<juce::Image> images;
+    juce::Image resamplingMask;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KnobComponent)
 };

@@ -6,7 +6,7 @@ name:             UI Loader
 description:      A module for loading and displaying UI components based on generated UI metadata.
 website:          https://bogrendigital.com
 license:          Proprietary
-dependencies:     juce_gui_basics, playfultones_smoothresizing
+dependencies:     juce_gui_basics, playfultones_smoothresizing, bd_image_resampler
 END_JUCE_MODULE_DECLARATION
 */
 #pragma once
@@ -14,6 +14,7 @@ END_JUCE_MODULE_DECLARATION
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <playfultones_smoothresizing/playfultones_smoothresizing.h>
+#include <bd_image_resampler/bd_image_resampler.h>
 #include "BinaryData.h"
 
 #include "src/UILoader.h"

@@ -12,6 +12,9 @@ public:
         
         // Create an array to hold all the knob frame images
         auto knobImages = juce::OwnedArray<juce::Image>();
+
+        const auto maskImageName = metadata.fileNamePrefix + "mask" + metadata.fileNameSuffix;
+        const auto maskImage = BinaryAssetLoading::loadImageFromBinaryData(BinaryAssetLoading::getResourceName(maskImageName));
             
         // Load all frame images
         for (int i = 0; i < metadata.numberOfFrames; ++i)
@@ -25,7 +28,7 @@ public:
         // Create the knob component with the loaded images
         if (knobImages.size() > 0)
         {
-            component = new KnobComponent(metadata.name, knobImages, metadata);
+            component = new KnobComponent(metadata.name, knobImages, metadata, maskImage);
             
             // Configure the slider ranges
             if (auto* knob = dynamic_cast<KnobComponent*>(component))

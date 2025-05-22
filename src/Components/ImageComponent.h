@@ -17,7 +17,9 @@ public:
         // Draw the image to fill the entire component bounds
         if (image.isValid())
         {
-            g.drawImage(image, getLocalBounds().toFloat());
+            const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
+                image, getWidth(), getHeight());
+            g.drawImageAt(resampledImage, 0, 0);
         }
         else
         {
