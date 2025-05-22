@@ -1,12 +1,13 @@
 #pragma once
 
-class KnobComponent : public juce::Slider, public PlayfulTones::ComponentResizer, public OriginalSizeReporter
+class KnobComponent : public juce::Slider, public PlayfulTones::ComponentResizer, public OriginalSizeReporter, public CachedImageResampler
 {
 public:
     KnobComponent(const juce::String& name,juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, juce::Image maskImage)
     : juce::Slider(name)
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
+    , CachedImageResampler(metadata, *dynamic_cast<juce::Component*>(this))
     , resamplingMask(std::move(maskImage))
     , useGuiResampler(metadata.useGuiResampler)
     {
@@ -14,6 +15,16 @@ public:
         setSliderStyle(juce::Slider::RotaryVerticalDrag);
         setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
         setOpaque(false);
+
+        resampleImages = [this]()
+        {
+            for (auto* image : images)
+            {
+                auto resampledImage = BogrenDigital::ImageResampler::applyResize(
+                        *image, resamplingMask, getWidth(), getHeight());
+                resampledImages.add(new juce::Image(resampledImage));
+            }
+        };
     }
     
     void paint(juce::Graphics& g) override
@@ -25,9 +36,16 @@ public:
             const auto imageIndex = static_cast<int>(normalizedValue * (images.size() - 1));
             if(BogrenDigital::ImageResampler::shouldUseResampling(getLocalBounds(), useGuiResampler))
             {
-                const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
-                    *images[imageIndex], resamplingMask, getWidth(), getHeight());
-                g.drawImageAt(resampledImage, 0, 0);
+                const auto resampledImage = resampledImages[imageIndex];
+                if (resampledImage == nullptr || !resampledImage->isValid())
+                {
+                    g.fillAll(juce::Colours::darkgrey.withAlpha(0.3f));
+                    g.setColour(juce::Colours::white);
+                    g.drawText("Resampling Failed", getLocalBounds(), 
+                               juce::Justification::centred, true);
+                    return;
+                }
+                g.drawImageAt(*resampledImage, 0, 0);
             }
             else
             {

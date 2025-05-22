@@ -20,6 +20,7 @@ END_JUCE_MODULE_DECLARATION
 #include "src/UILoader.h"
 #include "src/Helpers/OriginalSizeReporter.h"
 #include "src/Helpers/BinaryAssetLoading.h"
+#include "src/Helpers/CachedImageResampler.h"
 #include "src/Components/ImageComponent.h"
 #include "src/Components/KnobComponent.h"
 #include "src/Components/PlaceholderComponent.h"
