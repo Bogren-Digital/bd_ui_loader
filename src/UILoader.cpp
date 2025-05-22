@@ -223,9 +223,9 @@ void UILoader::applyLayout()
     }
 }
 
-void UILoader::setUseGuiResampler(bool useGuiResampler)
+void UILoader::setUseGuiResampler(bool useResampler)
 {
-    this->useGuiResampler = useGuiResampler;
+    this->useGuiResampler = useResampler;
 }
 
 bool UILoader::getUseGuiResampler() const

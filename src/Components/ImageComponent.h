@@ -8,6 +8,7 @@ public:
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
     , image(imageToUse)
+    , useGuiResampler(metadata.useGuiResampler)
     {
         setOpaque(false);
     }
@@ -17,9 +18,17 @@ public:
         // Draw the image to fill the entire component bounds
         if (image.isValid())
         {
-            const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
+            if (useGuiResampler)
+            {
+                const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
                 image, getWidth(), getHeight());
-            g.drawImageAt(resampledImage, 0, 0);
+                g.drawImageAt(resampledImage, 0, 0);
+            }
+            else
+            {
+                // Use the BogrenDigital resampler if enabled
+                g.drawImage(image, getLocalBounds().toFloat());
+            }
         }
         else
         {
@@ -33,6 +42,7 @@ public:
 
 private:
     juce::Image image;
+    const bool useGuiResampler = false;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ImageComponent)
 };

@@ -25,6 +25,7 @@ public:
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
     , resamplingMask(std::move(maskImage))
+    , useGuiResampler(metadata.useGuiResampler)
     {
         images.swapWith(imagesToUse); // Transfer ownership of images
         
@@ -78,9 +79,16 @@ public:
         if (selectedButtonIndex >= 0 && selectedButtonIndex < images.size() && 
             images[selectedButtonIndex] != nullptr && images[selectedButtonIndex]->isValid())
         {
-            const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
-                *images[selectedButtonIndex], resamplingMask, getWidth(), getHeight());
-            g.drawImageAt(resampledImage, 0, 0);
+            if (useGuiResampler)
+            {
+                const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
+                    *images[selectedButtonIndex], getWidth(), getHeight());
+                g.drawImageAt(resampledImage, 0, 0);
+            }
+            else
+            {
+                g.drawImage(*images[selectedButtonIndex], getLocalBounds().toFloat());
+            }
         }
         else
         {
@@ -127,6 +135,7 @@ private:
     juce::OwnedArray<juce::Image> images;
     juce::OwnedArray<juce::ToggleButton> buttons;
     int selectedButtonIndex = -1;
+    const bool useGuiResampler = false;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RadioButtonGroup)
 };

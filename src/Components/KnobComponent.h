@@ -8,6 +8,7 @@ public:
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
     , resamplingMask(std::move(maskImage))
+    , useGuiResampler(metadata.useGuiResampler)
     {
         images.swapWith(imagesToUse); // Transfer ownership of images
         setSliderStyle(juce::Slider::RotaryVerticalDrag);
@@ -22,9 +23,16 @@ public:
         {
             const auto normalizedValue = (getValue() - getMinimum()) / (getMaximum() - getMinimum());
             const auto imageIndex = static_cast<int>(normalizedValue * (images.size() - 1));
-            const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
-                *images[imageIndex], resamplingMask, getWidth(), getHeight());
-            g.drawImageAt(resampledImage, 0, 0);
+            if (useGuiResampler)
+            {
+                const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
+                    *images[imageIndex], getWidth(), getHeight());
+                g.drawImageAt(resampledImage, 0, 0);
+            }
+            else
+            {
+                g.drawImage(*images[imageIndex], getLocalBounds().toFloat());
+            }
         }
         else
         {
@@ -39,6 +47,7 @@ public:
 private:
     juce::OwnedArray<juce::Image> images;
     juce::Image resamplingMask;
+    const bool useGuiResampler = false;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KnobComponent)
 };
