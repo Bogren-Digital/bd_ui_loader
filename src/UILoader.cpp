@@ -110,6 +110,7 @@ void UILoader::parseXML(const juce::String& xmlContent)
             metadata.y = element->getIntAttribute("y", 0);
             metadata.width = element->getIntAttribute("width", 0);
             metadata.height = element->getIntAttribute("height", 0);
+            metadata.useGuiResampler = getUseGuiResampler();
             
             // Specific attributes based on type
             if (metadata.type == "IMAGE")
@@ -220,4 +221,14 @@ void UILoader::applyLayout()
     {
         applyLayoutToComponent(components[i]);
     }
+}
+
+void UILoader::setUseGuiResampler(bool useGuiResampler)
+{
+    this->useGuiResampler = useGuiResampler;
+}
+
+bool UILoader::getUseGuiResampler() const
+{
+    return useGuiResampler;
 }

@@ -9,6 +9,8 @@ public:
     ~UILoader();
     
     void loadUI();
+    void setUseGuiResampler(bool useGuiResampler);
+    bool getUseGuiResampler() const;
     
     static void registerComponentFactories();
     
@@ -35,11 +37,12 @@ public:
         int minY;
         int maxX;
         int maxY;
+        bool useGuiResampler;
         
         // Not all fields will be used for all component types
         ComponentMetadata() : x(0), y(0), width(0), height(0), 
                              numberOfFrames(0), minX(0), minY(0), 
-                             maxX(0), maxY(0) {}
+                             maxX(0), maxY(0), useGuiResampler(false) {}
     };
     
 private:
@@ -60,6 +63,8 @@ private:
     // Overall bitmap dimensions from XML root node
     int bitmapWidth = 0;
     int bitmapHeight = 0;
+
+    bool useGuiResampler = false;
 
     juce::Rectangle<float> sourceBounds { 0.0f, 0.0f, 0.0f, 0.0f };
     juce::Rectangle<float> targetBounds { 0.0f, 0.0f, 0.0f, 0.0f };
