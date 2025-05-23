@@ -25,7 +25,7 @@ public:
     : juce::Component(name)
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
-    , CachedImageResampler(metadata, *dynamic_cast<juce::Component*>(this), std::move(maskImage))
+    , CachedImageResampler(metadata.useGuiResampler, *dynamic_cast<juce::Component*>(this), std::move(maskImage))
     {
         images.swapWith(imagesToUse); // Transfer ownership of images
         

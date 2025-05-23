@@ -1,19 +1,18 @@
 class CachedImageResampler : public juce::ComponentListener, private juce::Timer
 {
 public:
-    CachedImageResampler(UILoader::ComponentMetadata metadata, juce::Component& wrappedComponent, juce::Image maskImage = {})
-        : componentMetadata(std::move(metadata))
-        , resamplingMask(std::move(maskImage))
+    CachedImageResampler(bool shouldDoResampling, juce::Component& wrappedComponent, juce::Image maskImage = {})
+        : resamplingMask(std::move(maskImage))
         , component(wrappedComponent)
     {
         component.addComponentListener(this);
 
         auto weakThis = juce::WeakReference<CachedImageResampler>(this);
-        juce::MessageManager::getInstance()->callAsync([weakThis]()
+        juce::MessageManager::getInstance()->callAsync([weakThis, shouldDoResampling]()
         {
             if (auto* strongThis = weakThis.get())
             {
-                strongThis->isEnabled = strongThis->componentMetadata.useGuiResampler;
+                strongThis->isEnabled = shouldDoResampling;
                 strongThis->handleResampling();
             }
         });
@@ -24,11 +23,16 @@ public:
         component.removeComponentListener(this);
     }
 
-    std::function<void()> onResampleImages = []
+    // This should be set by the owner of the CachedImageResampler object
+    // it's the responsibility of the owner to populate the resampledImages array in this function
+    std::function<void()> onResampleImages = [this]
     {
-        // Placeholder for the actual image resampling logic
-        // This should be set by the owner of the CachedImageResampler object
-        // it's the responsibility of the owner to populate the resampledImages array in this function
+        for (auto* image : images)
+        {
+            auto resampledImage = BogrenDigital::ImageResampler::applyResize(
+                    *image, resamplingMask, component.getWidth(), component.getHeight());
+            resampledImages.add(new juce::Image(resampledImage));
+        }
     };
 
     bool shouldDisplayResampledImages() const
@@ -38,7 +42,7 @@ public:
 
     bool shouldBeResampling() const
     {
-        return BogrenDigital::ImageResampler::shouldUseResampling(component.getLocalBounds(), componentMetadata.useGuiResampler);
+        return BogrenDigital::ImageResampler::shouldUseResampling(component.getLocalBounds(), isEnabled);
     }
 
     void drawImage(juce::Graphics& g, int imageIndex)
@@ -72,10 +76,9 @@ public:
     }
 
 protected:
-    UILoader::ComponentMetadata componentMetadata;
     juce::OwnedArray<juce::Image> images;
     juce::OwnedArray<juce::Image> resampledImages;
-    juce::Image resamplingMask;
+    juce::Image resamplingMask = {};
     std::atomic<bool> isResamplingDone = false;
 
 private:

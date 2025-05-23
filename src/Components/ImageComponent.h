@@ -1,34 +1,23 @@
 #pragma once
 
-class ImageComponent : public juce::Component, public PlayfulTones::ComponentResizer, public OriginalSizeReporter
+class ImageComponent : public juce::Component, public PlayfulTones::ComponentResizer, public OriginalSizeReporter, public CachedImageResampler
 {
 public:
-    ImageComponent(const juce::String& name, const juce::Image& imageToUse, UILoader::ComponentMetadata metadata)
+    ImageComponent(const juce::String& name, const juce::Image& imageToUse, UILoader::ComponentMetadata metadata, juce::Image maskImage = {})
     : juce::Component(name)
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
-    , image(imageToUse)
-    , useGuiResampler(metadata.useGuiResampler)
+    , CachedImageResampler(metadata.useGuiResampler, *dynamic_cast<juce::Component*>(this), std::move(maskImage))
     {
         setOpaque(false);
+        images.add(new juce::Image(imageToUse));
     }
     
     void paint(juce::Graphics& g) override
     {
-        // Draw the image to fill the entire component bounds
-        if (image.isValid())
+        if (images.size() > 0)
         {
-            if(BogrenDigital::ImageResampler::shouldUseResampling(getLocalBounds(), useGuiResampler))
-            {
-                const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
-                image, getWidth(), getHeight());
-                g.drawImageAt(resampledImage, 0, 0);
-            }
-            else
-            {
-                // Use the BogrenDigital resampler if enabled
-                g.drawImage(image, getLocalBounds().toFloat());
-            }
+            drawImage(g, 0);
         }
         else
         {
@@ -41,8 +30,6 @@ public:
     }
 
 private:
-    juce::Image image;
-    const bool useGuiResampler = false;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ImageComponent)
 };

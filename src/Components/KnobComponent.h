@@ -7,22 +7,12 @@ public:
     : juce::Slider(name)
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
-    , CachedImageResampler(metadata, *dynamic_cast<juce::Component*>(this), std::move(maskImage))
+    , CachedImageResampler(metadata.useGuiResampler, *dynamic_cast<juce::Component*>(this), std::move(maskImage))
     {
         images.swapWith(imagesToUse); // Transfer ownership of images
         setSliderStyle(juce::Slider::RotaryVerticalDrag);
         setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
         setOpaque(false);
-
-        onResampleImages = [this]()
-        {
-            for (auto* image : images)
-            {
-                auto resampledImage = BogrenDigital::ImageResampler::applyResize(
-                        *image, resamplingMask, getWidth(), getHeight());
-                resampledImages.add(new juce::Image(resampledImage));
-            }
-        };
     }
     
     void paint(juce::Graphics& g) override
