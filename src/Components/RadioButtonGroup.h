@@ -2,7 +2,8 @@
 
 class RadioButtonGroup : public juce::Component, 
                          public PlayfulTones::ComponentResizer, 
-                         public OriginalSizeReporter
+                         public OriginalSizeReporter,
+                         public CachedImageResampler
 {
 private:
     // Custom LookAndFeel that makes toggle buttons invisible
@@ -24,8 +25,7 @@ public:
     : juce::Component(name)
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
-    , resamplingMask(std::move(maskImage))
-    , useGuiResampler(metadata.useGuiResampler)
+    , CachedImageResampler(metadata, *dynamic_cast<juce::Component*>(this), std::move(maskImage))
     {
         images.swapWith(imagesToUse); // Transfer ownership of images
         
@@ -46,6 +46,16 @@ public:
             buttons[0]->setToggleState(true, juce::sendNotification);
             selectedButtonIndex = 0;
         }
+
+        onResampleImages = [this]()
+        {
+            for (auto* image : images)
+            {
+                auto resampledImage = BogrenDigital::ImageResampler::applyResize(
+                        *image, resamplingMask, getWidth(), getHeight());
+                resampledImages.add(new juce::Image(resampledImage));
+            }
+        };
         
         setOpaque(false);
     }
@@ -79,16 +89,7 @@ public:
         if (selectedButtonIndex >= 0 && selectedButtonIndex < images.size() && 
             images[selectedButtonIndex] != nullptr && images[selectedButtonIndex]->isValid())
         {
-            if(BogrenDigital::ImageResampler::shouldUseResampling(getLocalBounds(), useGuiResampler))
-            {
-                const auto resampledImage = BogrenDigital::ImageResampler::applyResize(
-                    *images[selectedButtonIndex], resamplingMask, getWidth(), getHeight());
-                g.drawImageAt(resampledImage, 0, 0);
-            }
-            else
-            {
-                g.drawImage(*images[selectedButtonIndex], getLocalBounds().toFloat());
-            }
+            drawImage(g, selectedButtonIndex);
         }
         else
         {
@@ -130,12 +131,9 @@ public:
     }
     
 private:
-    juce::Image resamplingMask;
     InvisibleToggleLookAndFeel invisibleLookAndFeel;
-    juce::OwnedArray<juce::Image> images;
     juce::OwnedArray<juce::ToggleButton> buttons;
     int selectedButtonIndex = -1;
-    const bool useGuiResampler = false;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RadioButtonGroup)
 };

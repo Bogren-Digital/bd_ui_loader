@@ -1,8 +1,9 @@
 class CachedImageResampler : public juce::ComponentListener, private juce::Timer
 {
 public:
-    CachedImageResampler(UILoader::ComponentMetadata metadata, juce::Component& wrappedComponent)
+    CachedImageResampler(UILoader::ComponentMetadata metadata, juce::Component& wrappedComponent, juce::Image maskImage = {})
         : componentMetadata(std::move(metadata))
+        , resamplingMask(std::move(maskImage))
         , component(wrappedComponent)
     {
         component.addComponentListener(this);
@@ -40,9 +41,41 @@ public:
         return BogrenDigital::ImageResampler::shouldUseResampling(component.getLocalBounds(), componentMetadata.useGuiResampler);
     }
 
+    void drawImage(juce::Graphics& g, int imageIndex)
+    {
+        if (imageIndex < 0 || imageIndex >= images.size())
+        {
+            g.fillAll(juce::Colours::darkgrey.withAlpha(0.3f));
+            g.setColour(juce::Colours::white);
+            g.drawText("Invalid Image Index", component.getLocalBounds(), 
+                       juce::Justification::centred, true);
+            return;
+        }
+
+        if(shouldDisplayResampledImages())
+        {
+            const auto resampledImage = resampledImages[imageIndex];
+            if (resampledImage == nullptr || !resampledImage->isValid())
+            {
+                g.fillAll(juce::Colours::darkgrey.withAlpha(0.3f));
+                g.setColour(juce::Colours::white);
+                g.drawText("Resampling Failed", component.getLocalBounds(), 
+                            juce::Justification::centred, true);
+                return;
+            }
+            g.drawImageAt(*resampledImage, 0, 0);
+        }
+        else
+        {
+            g.drawImage(*images[imageIndex], component.getLocalBounds().toFloat());
+        }
+    }
+
 protected:
     UILoader::ComponentMetadata componentMetadata;
+    juce::OwnedArray<juce::Image> images;
     juce::OwnedArray<juce::Image> resampledImages;
+    juce::Image resamplingMask;
     std::atomic<bool> isResamplingDone = false;
 
 private:
