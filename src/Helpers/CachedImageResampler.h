@@ -7,10 +7,14 @@ public:
     {
         component.addComponentListener(this);
 
-        juce::MessageManager::getInstance()->callAsync([this]()
+        auto weakThis = juce::WeakReference<CachedImageResampler>(this);
+        juce::MessageManager::getInstance()->callAsync([weakThis]()
         {
-            isEnabled = componentMetadata.useGuiResampler;
-            handleResampling();
+            if (auto* strongThis = weakThis.get())
+            {
+                strongThis->isEnabled = strongThis->componentMetadata.useGuiResampler;
+                strongThis->handleResampling();
+            }
         });
     }
 
@@ -86,4 +90,5 @@ private:
     }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CachedImageResampler)
+    JUCE_DECLARE_WEAK_REFERENCEABLE(CachedImageResampler)
 };
