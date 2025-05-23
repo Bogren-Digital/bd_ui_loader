@@ -1,13 +1,13 @@
 #pragma once
 
-class ImageComponent : public juce::Component, public PlayfulTones::ComponentResizer, public OriginalSizeReporter, public CachedImageResampler
+class ImageComponent : public juce::Component, public PlayfulTones::ComponentResizer, public OriginalSizeReporter, public BogrenDigital::ImageResampler::DeferredImageResampler
 {
 public:
     ImageComponent(const juce::String& name, const juce::Image& imageToUse, UILoader::ComponentMetadata metadata, juce::Image maskImage = {})
     : juce::Component(name)
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
-    , CachedImageResampler(metadata.useGuiResampler, *dynamic_cast<juce::Component*>(this), std::move(maskImage))
+    , DeferredImageResampler(metadata.useGuiResampler, *dynamic_cast<juce::Component*>(this), std::move(maskImage))
     {
         setOpaque(false);
         images.add(new juce::Image(imageToUse));

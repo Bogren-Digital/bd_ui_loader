@@ -3,7 +3,7 @@
 class RadioButtonGroup : public juce::Component, 
                          public PlayfulTones::ComponentResizer, 
                          public OriginalSizeReporter,
-                         public CachedImageResampler
+                         public BogrenDigital::ImageResampler::DeferredImageResampler
 {
 private:
     // Custom LookAndFeel that makes toggle buttons invisible
@@ -25,7 +25,7 @@ public:
     : juce::Component(name)
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
-    , CachedImageResampler(metadata.useGuiResampler, *dynamic_cast<juce::Component*>(this), std::move(maskImage))
+    , DeferredImageResampler(metadata.useGuiResampler, *dynamic_cast<juce::Component*>(this), std::move(maskImage))
     {
         images.swapWith(imagesToUse); // Transfer ownership of images
         

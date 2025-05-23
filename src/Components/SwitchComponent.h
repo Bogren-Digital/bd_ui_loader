@@ -3,7 +3,7 @@
 class SwitchComponent : public juce::ToggleButton, 
                         public PlayfulTones::ComponentResizer, 
                         public OriginalSizeReporter,
-                        public CachedImageResampler
+                        public BogrenDigital::ImageResampler::DeferredImageResampler
 {
 private:
     // Custom LookAndFeel that draws toggle buttons using the provided images
@@ -26,7 +26,7 @@ private:
                 int imageIndex = button.getToggleState() ? 1 : 0;
                 if (imageIndex < images->size() && (*images)[imageIndex] != nullptr && (*images)[imageIndex]->isValid())
                 {
-                    dynamic_cast<CachedImageResampler*>(&button)->drawImage(g, imageIndex);
+                    dynamic_cast<DeferredImageResampler*>(&button)->drawImage(g, imageIndex);
                     return;
                 }
             }
@@ -48,7 +48,7 @@ public:
     : juce::ToggleButton(name)
     , PlayfulTones::ComponentResizer(*dynamic_cast<juce::Component*>(this))
     , OriginalSizeReporter(std::move(metadata))
-    , CachedImageResampler(metadata.useGuiResampler, *dynamic_cast<juce::Component*>(this), std::move(mask))
+    , DeferredImageResampler(metadata.useGuiResampler, *dynamic_cast<juce::Component*>(this), std::move(mask))
     {
         images.swapWith(imagesToUse); // Transfer ownership of images
         
