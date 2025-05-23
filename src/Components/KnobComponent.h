@@ -34,7 +34,7 @@ public:
         {
             const auto normalizedValue = (getValue() - getMinimum()) / (getMaximum() - getMinimum());
             const auto imageIndex = static_cast<int>(normalizedValue * (images.size() - 1));
-            if(BogrenDigital::ImageResampler::shouldUseResampling(getLocalBounds(), useGuiResampler))
+            if(shouldDisplayResampledImages())
             {
                 const auto resampledImage = resampledImages[imageIndex];
                 if (resampledImage == nullptr || !resampledImage->isValid())
