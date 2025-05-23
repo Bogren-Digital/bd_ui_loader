@@ -23,18 +23,6 @@ public:
         component.removeComponentListener(this);
     }
 
-    // This should be set by the owner of the CachedImageResampler object
-    // it's the responsibility of the owner to populate the resampledImages array in this function
-    std::function<void()> onResampleImages = [this]
-    {
-        for (auto* image : images)
-        {
-            auto resampledImage = BogrenDigital::ImageResampler::applyResize(
-                    *image, resamplingMask, component.getWidth(), component.getHeight());
-            resampledImages.add(new juce::Image(resampledImage));
-        }
-    };
-
     bool shouldDisplayResampledImages() const
     {
         return isResamplingDone && shouldBeResampling();
@@ -80,10 +68,75 @@ protected:
     juce::OwnedArray<juce::Image> resampledImages;
     juce::Image resamplingMask = {};
     std::atomic<bool> isResamplingDone = false;
+    constexpr static auto delayTimeMs = 500;
 
 private:
     juce::Component& component;
     std::atomic<bool> isEnabled = false;
+
+    struct ImageResamplingThreadPool
+    {
+    public:
+        ImageResamplingThreadPool() = default;
+        ~ImageResamplingThreadPool()
+        {
+            threadPool.removeAllJobs(true, delayTimeMs);
+        }
+        juce::ThreadPool threadPool { juce::ThreadPoolOptions{}
+            .withThreadName ("Image Resampling Thread")
+            .withNumberOfThreads (1) };
+    };
+
+    juce::SharedResourcePointer<ImageResamplingThreadPool> threadPool;
+
+    class ResamplingJob : public juce::ThreadPoolJob
+    {
+    public:
+        ResamplingJob(CachedImageResampler& r)
+            : juce::ThreadPoolJob("Image Resampling job"),
+            resampler(r)
+        {
+        }
+
+        ~ResamplingJob() override = default;
+
+    private:
+        juce::ThreadPoolJob::JobStatus runJob() override
+        {
+            if (shouldExit())
+                return juce::ThreadPoolJob::jobHasFinished;
+
+            const auto timeNowMs = juce::Time::getCurrentTime().toMilliseconds();
+            resampler.isResamplingDone = false;
+            resampler.resampledImages.clear();
+            for (auto* image : resampler.images)
+            {
+                if (shouldExit())
+                    return juce::ThreadPoolJob::jobHasFinished;
+                
+                auto resampledImage = BogrenDigital::ImageResampler::applyResize(
+                        *image, resampler.resamplingMask, resampler.component.getWidth(), resampler.component.getHeight());
+                resampler.resampledImages.add(new juce::Image(resampledImage));
+            }
+            resampler.isResamplingDone = true;
+            auto weakThis = juce::WeakReference<CachedImageResampler>(&resampler);
+            juce::MessageManager::getInstance()->callAsync([weakThis]()
+            {
+                if (auto* strongThis = weakThis.get())
+                {
+                    strongThis->component.repaint();
+                }
+            });
+            auto timeTakenMs = juce::Time::getCurrentTime().toMilliseconds() - timeNowMs;
+            juce::Logger::writeToLog("Resampling for " + resampler.component.getName() + " took " + juce::String(timeTakenMs) + " ms");
+            
+            return juce::ThreadPoolJob::jobHasFinished;
+        }
+
+        CachedImageResampler& resampler;
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ResamplingJob)
+    };
 
     void handleResampling()
     {
@@ -94,14 +147,7 @@ private:
         
         if (shouldBeResampling())
         {
-            const auto timeNowMs = juce::Time::getCurrentTime().toMilliseconds();
-            isResamplingDone = false;
-            resampledImages.clear();
-            onResampleImages();
-            isResamplingDone = true;
-            component.repaint();
-            auto timeTakenMs = juce::Time::getCurrentTime().toMilliseconds() - timeNowMs;
-            juce::Logger::writeToLog("Resampling for " + component.getName() + " took " + juce::String(timeTakenMs) + " ms");
+            threadPool->threadPool.addJob(new ResamplingJob(*this), true);
         }
     }
 
@@ -115,8 +161,8 @@ private:
         }
         
         isResamplingDone = false;
-        startTimer(500);
-        // This will trigger a resampling after 500ms if the component is resized
+        threadPool->threadPool.removeAllJobs(true, delayTimeMs);
+        startTimer(delayTimeMs);
     }
 
     void timerCallback() override
@@ -125,6 +171,7 @@ private:
         handleResampling();
     }
 
+    friend class ResamplingJob;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CachedImageResampler)
     JUCE_DECLARE_WEAK_REFERENCEABLE(CachedImageResampler)
 };

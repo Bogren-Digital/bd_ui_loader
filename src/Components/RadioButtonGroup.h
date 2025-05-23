@@ -46,16 +46,6 @@ public:
             buttons[0]->setToggleState(true, juce::sendNotification);
             selectedButtonIndex = 0;
         }
-
-        onResampleImages = [this]()
-        {
-            for (auto* image : images)
-            {
-                auto resampledImage = BogrenDigital::ImageResampler::applyResize(
-                        *image, resamplingMask, getWidth(), getHeight());
-                resampledImages.add(new juce::Image(resampledImage));
-            }
-        };
         
         setOpaque(false);
     }
