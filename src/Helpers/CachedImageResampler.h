@@ -71,7 +71,7 @@ private:
 
     void componentMovedOrResized(juce::Component& c, bool wasMoved, bool wasResized) override
     {
-        juce::ignoreUnused(wasMoved);
+        juce::ignoreUnused(c, wasMoved);
 
         if (!wasResized)
         {
