@@ -16,7 +16,7 @@ public:
         setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
         setOpaque(false);
 
-        resampleImages = [this]()
+        onResampleImages = [this]()
         {
             for (auto* image : images)
             {
