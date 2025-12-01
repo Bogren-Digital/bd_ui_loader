@@ -55,7 +55,7 @@ namespace BogrenDigital::UILoading
 
     void UILoader::loadUI (const juce::String& xmlFileName)
     {
-        juce::String xmlContent = imageLoader.getStringFromAsset (xmlFileName);
+        const auto xmlContent = imageLoader.getStringFromAsset (xmlFileName);
         parseXML (xmlContent);
         applyProportionalResize();
         applyLayout();

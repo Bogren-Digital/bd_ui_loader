@@ -42,6 +42,8 @@ A JUCE module for dynamically loading and managing UI components from XML metada
 - `bd_image_resampler` - High-quality image resampling
 - `bd_binary_asset_utilities` - Binary asset loading utilities
 
+This library includes [BS::thread_pool](https://github.com/bshoshany/thread-pool) by Barak Shoshany, licensed under the MIT License.
+
 ## Integration
 
 ### 1. Basic Setup

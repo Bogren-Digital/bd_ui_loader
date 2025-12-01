@@ -4,7 +4,7 @@ namespace BogrenDigital::UILoading
 {
     /**
      * @brief Utility for loading images from BinaryData collections.
-     * 
+     *
      * Inherits from BinaryAssetLoader to reuse core binary resource iteration logic.
      * Provides methods to load individual images or iterate through image collections.
      */
@@ -20,6 +20,11 @@ namespace BogrenDigital::UILoading
             int namedResourceListSize,
             BinaryAssetUtilities::GetNamedResourceFunc getNamedResource,
             BinaryAssetUtilities::GetNamedResourceOriginalFilenameFunc getOriginalFilename);
+
+        /**
+         * @brief Destructor - must be defined in .cpp where Impl is complete
+         */
+        ~BinaryAssetImageLoader();
 
         /**
          * @brief Loads an image from binary data by resource name.
@@ -79,5 +84,20 @@ namespace BogrenDigital::UILoading
             const juce::String& filePrefix,
             const juce::Array<juce::String>& fileNames,
             const juce::String& fileSuffix) const;
+
+    private:
+        /**
+         * @brief Core implementation that loads images from an array of filenames.
+         *
+         * Uses sequential loading for 10 or fewer images, parallel loading for more.
+         *
+         * @param filenames Array of complete filenames to load
+         * @return An array of loaded images
+         */
+        [[nodiscard]] juce::OwnedArray<juce::Image> loadImageSequenceFromFilenames (
+            const std::vector<juce::String>& filenames) const;
+
+        struct Impl;
+        std::unique_ptr<Impl> impl;
     };
 }
