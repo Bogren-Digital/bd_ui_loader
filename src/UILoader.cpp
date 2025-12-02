@@ -146,20 +146,20 @@ namespace BogrenDigital::UILoading
         auto& registry = *componentFactoryRegistry;
 
         // Register basic component factories
-        registry.registerFactory<ImageComponentFactory> (this, "IMAGE", "raster");
-        registry.registerFactory<TweenableComponentFactory> (this, "TWEENABLE", "", std::ref (*this));
-        registry.registerFactory<ComboBoxFactory> (this, "DROPDOWN");
+        registry.registerFactory<ImageComponentFactory> ( "IMAGE", "raster");
+        registry.registerFactory<TweenableComponentFactory> ( "TWEENABLE", "", std::ref (*this));
+        registry.registerFactory<ComboBoxFactory> ( "DROPDOWN");
 
         // Register group-based factories
-        registry.registerFactory<KnobComponentFactory> (this, "KNOB", "raster");
-        registry.registerFactory<KnobComponentFactory> (this, "DIAL", "raster");
-        registry.registerFactory<RadioButtonGroupFactory> (this, "BUTTONS", "raster");
-        registry.registerFactory<SwitchFactory> (this, "SWITCH", "raster");
-        registry.registerFactory<HooverableFactory> (this, "HOOVERABLE", "raster");
-        registry.registerFactory<HooverableFactory> (this, "LED", "raster");
+        registry.registerFactory<KnobComponentFactory> ( "KNOB", "raster");
+        registry.registerFactory<KnobComponentFactory> ( "DIAL", "raster");
+        registry.registerFactory<RadioButtonGroupFactory> ( "BUTTONS", "raster");
+        registry.registerFactory<SwitchFactory> ( "SWITCH", "raster");
+        registry.registerFactory<HooverableFactory> ( "HOOVERABLE", "raster");
+        registry.registerFactory<HooverableFactory> ( "LED", "raster");
 
         // Register fallback factory
-        registry.registerFactory<PlaceholderComponentFactory> (this, "PLACEHOLDER");
+        registry.registerFactory<PlaceholderComponentFactory> ( "PLACEHOLDER");
     }
 
     void UILoader::applyLayoutToComponent (juce::Component* component)

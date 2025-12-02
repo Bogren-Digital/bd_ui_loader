@@ -20,15 +20,13 @@ public:
      * Use std::ref() to pass references (e.g., std::ref(uiLoader)).
      */
     template<typename FactoryType, typename... Args>
-    void registerFactory(UILoader* loader, const juce::String& metadataType, const juce::String& componentType = "", Args&&... args)
+    void registerFactory(const juce::String& metadataType, const juce::String& componentType = "", Args&&... args)
     {
-        auto key = getKey(metadataType, componentType);
+        const auto key = getKey(metadataType, componentType);
 
-        // Capture args in a tuple so they persist beyond this function call
         auto argsTuple = std::make_tuple(std::forward<Args>(args)...);
 
         factories[key] = [argsTuple](UILoader* loader) mutable {
-            // Use std::apply to unpack the tuple and forward to the factory constructor
             return std::apply([&loader](auto&&... capturedArgs) {
                 return std::make_unique<FactoryType>(
                     loader->getImageLoader(),
