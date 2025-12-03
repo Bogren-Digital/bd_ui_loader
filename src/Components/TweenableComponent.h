@@ -12,7 +12,7 @@ namespace BogrenDigital::UILoading
     class TweenableComponent : public ImageComponent
     {
     public:
-        TweenableComponent(const juce::String& name, const juce::Image& imageToUse, UILoader::ComponentMetadata metadata);
+        TweenableComponent(const juce::String& name, const juce::Image& imageToUse, UILoader::ComponentMetadata metadata, juce::Image maskImage = {}, juce::Image hitboxMaskImage = {});
 
         void setNormalizedValue(float newValue);
         float getNormalizedValue() const;

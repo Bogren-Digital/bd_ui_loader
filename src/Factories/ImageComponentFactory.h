@@ -20,7 +20,13 @@ public:
         const auto maskFilename = filename + "_mask" + extension;
         juce::Image maskImage = imageLoader.loadImageByFilename(maskFilename);
 
-        return new ImageComponent(metadata.name, image, metadata, maskImage);
+        juce::Image hitboxMask;
+        if (metadata.hitboxMask.isNotEmpty())
+        {
+            hitboxMask = imageLoader.loadImageByFilename(metadata.hitboxMask);
+        }
+
+        return new ImageComponent(metadata.name, image, metadata, maskImage, hitboxMask);
     }
 };
 

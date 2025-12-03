@@ -23,7 +23,13 @@ namespace BogrenDigital::UILoading
                 const auto maskImageName = metadata.fileNamePrefix + "mask" + metadata.fileNameSuffix;
                 const auto maskImage = imageLoader.loadImageByFilename(maskImageName);
 
-                component = new KnobComponent(metadata.name, knobImages, metadata, maskImage);
+                juce::Image hitboxMask;
+                if (metadata.hitboxMask.isNotEmpty())
+                {
+                    hitboxMask = imageLoader.loadImageByFilename(metadata.hitboxMask);
+                }
+
+                component = new KnobComponent(metadata.name, knobImages, metadata, maskImage, hitboxMask);
 
                 if (auto* knob = dynamic_cast<KnobComponent*>(component))
                 {

@@ -1,7 +1,7 @@
 namespace BogrenDigital::UILoading
 {
-    TweenableComponent::TweenableComponent(const juce::String& name, const juce::Image& imageToUse, UILoader::ComponentMetadata metadata)
-    : ImageComponent(name, imageToUse, std::move(metadata))
+    TweenableComponent::TweenableComponent(const juce::String& name, const juce::Image& imageToUse, UILoader::ComponentMetadata metadata, juce::Image maskImage, juce::Image hitboxMaskImage)
+    : ImageComponent(name, imageToUse, std::move(metadata), std::move(maskImage), std::move(hitboxMaskImage))
     , timerCallback(*this)
     {
         timerCallback.callback = [](TweenableComponent& comp) {

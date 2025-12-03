@@ -49,6 +49,7 @@ namespace BogrenDigital::UILoading
             STRING_FIELD(fileNamePrefix, "") \
             STRING_FIELD(fileNameSuffix, "") \
             STRING_FIELD(imageType, "") \
+            STRING_FIELD(hitboxMask, "") \
             INT_FIELD(x, 0) \
             INT_FIELD(y, 0) \
             INT_FIELD(width, 0) \
@@ -88,6 +89,7 @@ namespace BogrenDigital::UILoading
             ComponentMetadata& withWidth(int value) { width = value; return *this; }
             ComponentMetadata& withHeight(int value) { height = value; return *this; }
             ComponentMetadata& withImageType(const juce::String& ct) { imageType = ct; return *this; }
+            ComponentMetadata& withHitboxMask(const juce::String& hm) { hitboxMask = hm; return *this; }
             ComponentMetadata& withFileNamePrefix(const juce::String& fnp) { fileNamePrefix = fnp; return *this; }
             ComponentMetadata& withFileNameSuffix(const juce::String& fns) { fileNameSuffix = fns; return *this; }
             ComponentMetadata& withNumberOfFrames(int nof) { numberOfFrames = nof; return *this; }

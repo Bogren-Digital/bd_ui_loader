@@ -34,9 +34,19 @@ public:
         }
 
         if (buttonImages.size() > 0)
-            component = new HooverableSwitchComponent(metadata.name, buttonImages, metadata);
+        {
+            juce::Image hitboxMask;
+            if (metadata.hitboxMask.isNotEmpty())
+            {
+                hitboxMask = imageLoader.loadImageByFilename(metadata.hitboxMask);
+            }
+
+            component = new HooverableSwitchComponent(metadata.name, buttonImages, metadata, hitboxMask);
+        }
         else
+        {
             component = new PlaceholderComponent(metadata.name, metadata);
+        }
 
         return component;
     }

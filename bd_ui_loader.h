@@ -21,6 +21,7 @@ END_JUCE_MODULE_DECLARATION
 #include "src/UILoader.h"
 
 #include "src/Helpers/BinaryAssetImageLoader.h"
+#include "src/Helpers/HitBoxMaskTester.h"
 
 #include "src/Components/ComboBox.h"
 #include "src/Components/HooverableSwitchComponent.h"

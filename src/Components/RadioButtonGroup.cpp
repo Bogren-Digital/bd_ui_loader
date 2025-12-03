@@ -7,9 +7,10 @@ void RadioButtonGroup::InvisibleToggleLookAndFeel::drawToggleButton(juce::Graphi
     juce::ignoreUnused(g, button, shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
 }
 
-RadioButtonGroup::RadioButtonGroup(const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, juce::Image maskImage)
+RadioButtonGroup::RadioButtonGroup(const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, juce::Image maskImage, juce::Image hitboxMaskImage)
 : juce::Component(name)
 , DeferredImageResampler(*dynamic_cast<juce::Component*>(this), std::move(maskImage))
+, hitboxMask (std::move (hitboxMaskImage))
 {
     images.swapWith(imagesToUse); // Transfer ownership of images
 
@@ -99,5 +100,10 @@ void RadioButtonGroup::setSelectedButtonIndex(int index)
 
         repaint(); // Redraw with the new selected image
     }
+}
+
+bool RadioButtonGroup::hitTest (int x, int y)
+{
+    return HitBoxMaskTester::hitTest (*this, x, y, hitboxMask);
 }
 }

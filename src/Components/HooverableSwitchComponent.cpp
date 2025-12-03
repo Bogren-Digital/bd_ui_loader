@@ -1,48 +1,52 @@
-namespace BogrenDigital::UILoading {
-
-void HooverableSwitchComponent::SwitchLookAndFeel::drawToggleButton(juce::Graphics& g, juce::ToggleButton& button,
-                         bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+namespace BogrenDigital::UILoading
 {
-    juce::ignoreUnused(shouldDrawButtonAsDown);
-    if(!shouldDrawButtonAsHighlighted)
-        return;
 
-    // Check the toggle state and draw the appropriate image
-    if (images != nullptr)
+    void HooverableSwitchComponent::SwitchLookAndFeel::drawToggleButton (juce::Graphics& g, juce::ToggleButton& button, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
     {
-        int imageIndex = 0;
-        if (imageIndex < images->size() && (*images)[imageIndex] != nullptr && (*images)[imageIndex]->isValid())
-        {
-            g.drawImage(*(*images)[imageIndex], button.getLocalBounds().toFloat());
+        juce::ignoreUnused (shouldDrawButtonAsDown);
+        if (!shouldDrawButtonAsHighlighted)
             return;
+
+        // Check the toggle state and draw the appropriate image
+        if (images != nullptr)
+        {
+            int imageIndex = 0;
+            if (imageIndex < images->size() && (*images)[imageIndex] != nullptr && (*images)[imageIndex]->isValid())
+            {
+                g.drawImage (*(*images)[imageIndex], button.getLocalBounds().toFloat());
+                return;
+            }
         }
+        // Fallback if no valid image or images array is empty
+        g.fillAll (juce::Colours::darkgrey.withAlpha (0.3f));
+        g.setColour (juce::Colours::white);
+        g.drawText ("Switch: " + button.getName(), button.getLocalBounds(), juce::Justification::centred, true);
     }
-    // Fallback if no valid image or images array is empty
-    g.fillAll(juce::Colours::darkgrey.withAlpha(0.3f));
-    g.setColour(juce::Colours::white);
-    g.drawText("Switch: " + button.getName(), button.getLocalBounds(),
-                juce::Justification::centred, true);
-}
 
-HooverableSwitchComponent::HooverableSwitchComponent(const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata)
-: juce::ToggleButton(name)
-{
-    images.swapWith(imagesToUse); // Transfer ownership of images
+    HooverableSwitchComponent::HooverableSwitchComponent (const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, juce::Image hitboxMaskImage)
+        : juce::ToggleButton (name), hitboxMask (std::move (hitboxMaskImage))
+    {
+        images.swapWith (imagesToUse); // Transfer ownership of images
 
-    // Set our custom look and feel
-    switchLookAndFeel.setImages(&images);
-    setLookAndFeel(&switchLookAndFeel);
+        // Set our custom look and feel
+        switchLookAndFeel.setImages (&images);
+        setLookAndFeel (&switchLookAndFeel);
 
-    // Default state is off (first image)
-    setToggleState(false, juce::dontSendNotification);
+        // Default state is off (first image)
+        setToggleState (false, juce::dontSendNotification);
 
-    setOpaque(false);
-}
+        setOpaque (false);
+    }
 
-HooverableSwitchComponent::~HooverableSwitchComponent()
-{
-    // Reset the LookAndFeel to avoid dangling pointers
-    setLookAndFeel(nullptr);
-}
+    HooverableSwitchComponent::~HooverableSwitchComponent()
+    {
+        // Reset the LookAndFeel to avoid dangling pointers
+        setLookAndFeel (nullptr);
+    }
+
+    bool HooverableSwitchComponent::hitTest (int x, int y)
+    {
+        return HitBoxMaskTester::hitTest (*this, x, y, hitboxMask);
+    }
 
 } // namespace BogrenDigital::UILoading

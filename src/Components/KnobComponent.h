@@ -13,10 +13,12 @@ namespace BogrenDigital::UILoading
                           public BogrenDigital::ImageResampler::DeferredImageResampler
     {
     public:
-        KnobComponent (const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, juce::Image maskImage);
+        KnobComponent (const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, juce::Image maskImage, juce::Image hitboxMaskImage = {});
         void paint (juce::Graphics& g) override;
+        bool hitTest (int x, int y) override;
 
     private:
+        juce::Image hitboxMask;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KnobComponent)
     };
 

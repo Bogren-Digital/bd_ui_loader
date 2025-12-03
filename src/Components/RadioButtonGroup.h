@@ -21,7 +21,7 @@ namespace BogrenDigital::UILoading
         };
 
     public:
-        RadioButtonGroup (const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, juce::Image maskImage);
+        RadioButtonGroup (const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, juce::Image maskImage, juce::Image hitboxMaskImage = {});
         ~RadioButtonGroup() override;
 
         void resized() override;
@@ -31,7 +31,10 @@ namespace BogrenDigital::UILoading
         int getSelectedButtonIndex() const;
         void setSelectedButtonIndex (int index);
 
+        bool hitTest (int x, int y) override;
+
     private:
+        juce::Image hitboxMask;
         InvisibleToggleLookAndFeel invisibleLookAndFeel;
         juce::OwnedArray<juce::ToggleButton> buttons;
         int selectedButtonIndex = -1;

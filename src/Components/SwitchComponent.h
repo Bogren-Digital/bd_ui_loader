@@ -27,29 +27,33 @@ namespace BogrenDigital::UILoading
     class SwitchComponent : public juce::ToggleButton,
                             public BogrenDigital::ImageResampler::DeferredImageResampler
     {
-
     public:
-        SwitchComponent (const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, juce::Image mask)
-        : juce::ToggleButton(name)
-        , DeferredImageResampler( *dynamic_cast<juce::Component*>(this), std::move(mask))
+        SwitchComponent (const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, juce::Image mask, juce::Image hitboxMaskImage = {})
+            : juce::ToggleButton (name), DeferredImageResampler (*dynamic_cast<juce::Component*> (this), std::move (mask)), hitboxMask (std::move (hitboxMaskImage))
         {
-            this->images.swapWith(imagesToUse); // Transfer ownership of images to inherited member
-            switchLookAndFeel.setImages(&this->images);
-            setLookAndFeel(&switchLookAndFeel);
+            this->images.swapWith (imagesToUse); // Transfer ownership of images to inherited member
+            switchLookAndFeel.setImages (&this->images);
+            setLookAndFeel (&switchLookAndFeel);
 
             // Default state is off (first image)
-            setToggleState(false, juce::dontSendNotification);
+            setToggleState (false, juce::dontSendNotification);
 
-            setOpaque(false);
+            setOpaque (false);
         }
 
         ~SwitchComponent() override
         {
             // Reset the LookAndFeel to avoid dangling pointers
-            setLookAndFeel(nullptr);
+            setLookAndFeel (nullptr);
+        }
+
+        bool hitTest (int x, int y) override
+        {
+            return HitBoxMaskTester::hitTest (*this, x, y, hitboxMask);
         }
 
     private:
+        juce::Image hitboxMask;
         LookAndFeelType switchLookAndFeel;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SwitchComponent)

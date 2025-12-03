@@ -16,7 +16,19 @@ public:
     juce::Component* createComponent(const UILoader::ComponentMetadata& metadata) override
     {
         juce::Image image = imageLoader.loadImageByFilename(metadata.file);
-        TweenableComponent* component = new TweenableComponent(metadata.name, image, metadata);
+
+        const auto filename = metadata.file.upToLastOccurrenceOf(".", false, false);
+        const auto extension = metadata.file.fromLastOccurrenceOf(".", true, false);
+        const auto maskFilename = filename + "_mask" + extension;
+        juce::Image maskImage = imageLoader.loadImageByFilename(maskFilename);
+
+        juce::Image hitboxMask;
+        if (metadata.hitboxMask.isNotEmpty())
+        {
+            hitboxMask = imageLoader.loadImageByFilename(metadata.hitboxMask);
+        }
+
+        TweenableComponent* component = new TweenableComponent(metadata.name, image, metadata, maskImage, hitboxMask);
         UILoader* uiBuilder = &uiLoader;
 
         // Set up the callback for position updates when the normalized value changes

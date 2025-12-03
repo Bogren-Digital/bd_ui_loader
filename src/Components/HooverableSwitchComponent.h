@@ -25,11 +25,13 @@ private:
     };
 
 public:
-    HooverableSwitchComponent(const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata);
+    HooverableSwitchComponent(const juce::String& name, juce::OwnedArray<juce::Image>& imagesToUse, UILoader::ComponentMetadata metadata, juce::Image hitboxMaskImage = {});
     ~HooverableSwitchComponent() override;
+    bool hitTest(int x, int y) override;
 
 private:
     juce::OwnedArray<juce::Image> images;
+    juce::Image hitboxMask;
     SwitchLookAndFeel switchLookAndFeel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HooverableSwitchComponent)

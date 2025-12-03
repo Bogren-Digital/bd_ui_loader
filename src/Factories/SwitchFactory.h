@@ -23,7 +23,13 @@ public:
             const auto maskImageName = metadata.fileNamePrefix + "mask" + metadata.fileNameSuffix;
             const auto maskImage = imageLoader.loadImageByFilename(maskImageName);
 
-            component = new SwitchComponent(metadata.name, buttonImages, metadata, maskImage);
+            juce::Image hitboxMask;
+            if (metadata.hitboxMask.isNotEmpty())
+            {
+                hitboxMask = imageLoader.loadImageByFilename(metadata.hitboxMask);
+            }
+
+            component = new SwitchComponent(metadata.name, buttonImages, metadata, maskImage, hitboxMask);
         }
         else
         {
