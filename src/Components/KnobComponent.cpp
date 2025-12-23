@@ -8,6 +8,7 @@ namespace BogrenDigital::UILoading
         setSliderStyle (juce::Slider::RotaryVerticalDrag);
         setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
         setOpaque (false);
+        setWantsKeyboardFocus (true);
     }
 
     void KnobComponent::paint (juce::Graphics& g)
