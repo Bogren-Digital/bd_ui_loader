@@ -52,6 +52,15 @@ namespace BogrenDigital::UILoading
             return HitBoxMaskTester::hitTest (*this, x, y, hitboxMask);
         }
 
+        void mouseUp (const juce::MouseEvent& e) override
+        {
+            // Block clicks if Ctrl+Cmd is held (Pro Tools getControlParameterIndex query)
+            if (e.mods.isCtrlDown() && e.mods.isCommandDown())
+                return;
+
+            juce::ToggleButton::mouseUp (e);
+        }
+
     private:
         juce::Image hitboxMask;
         LookAndFeelType switchLookAndFeel;
