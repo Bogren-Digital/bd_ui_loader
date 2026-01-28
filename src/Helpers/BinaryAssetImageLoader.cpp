@@ -31,7 +31,21 @@ namespace BogrenDigital::UILoading
             return {};
         }
 
-        return juce::ImageFileFormat::loadFrom (imageData, static_cast<size_t> (dataSize));
+        const auto hashCode = resourceName.hashCode64();
+
+        if (auto cachedImage = juce::ImageCache::getFromHashCode (hashCode); cachedImage.isValid())
+        {
+            return cachedImage;
+        }
+
+        auto image = juce::ImageFileFormat::loadFrom (imageData, static_cast<size_t> (dataSize));
+
+        if (image.isValid())
+        {
+            juce::ImageCache::addImageToCache (image, hashCode);
+        }
+
+        return image;
     }
 
     juce::Image BinaryAssetImageLoader::loadImageByFilename (const juce::String& filename) const
