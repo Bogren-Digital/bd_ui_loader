@@ -13,8 +13,7 @@ namespace BogrenDigital::UILoading
         int numAssets,
         BinaryAssetUtilities::GetNamedResourceFunc getNamedResourcePtr,
         BinaryAssetUtilities::GetNamedResourceOriginalFilenameFunc getOriginalFilenamePtr)
-        : BinaryAssetLoader (namedResourceListPtr, numAssets, getNamedResourcePtr, getOriginalFilenamePtr)
-        , impl (std::make_unique<Impl>())
+        : BinaryAssetLoader (namedResourceListPtr, numAssets, getNamedResourcePtr, getOriginalFilenamePtr), impl (std::make_unique<Impl>())
     {
     }
 
@@ -87,8 +86,7 @@ namespace BogrenDigital::UILoading
 
         for (int i = 0; i < numImages; ++i)
         {
-            impl->threadPool.detach_task ([this, &loadedImages, filename = filenames[i], index = i]
-            {
+            impl->threadPool.detach_task ([this, &loadedImages, filename = filenames[i], index = i] {
                 if (const auto image = loadImageByFilename (filename); image.isValid())
                 {
                     loadedImages[index] = std::move (image);
