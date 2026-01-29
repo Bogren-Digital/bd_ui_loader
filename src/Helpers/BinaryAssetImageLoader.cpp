@@ -2,19 +2,27 @@
 
 namespace BogrenDigital::UILoading
 {
-    struct BinaryAssetImageLoader::Impl
+    /**
+     * @brief Shared thread pool for parallel image loading.
+     *
+     * Using SharedResourcePointer ensures all BinaryAssetImageLoader instances
+     * share a single thread pool, reducing memory usage in multi-instance scenarios.
+     */
+    struct SharedImageLoadingThreadPool
     {
         BS::thread_pool<> threadPool;
 
-        Impl() : threadPool (static_cast<std::size_t> (juce::SystemStats::getNumCpus())) {}
+        SharedImageLoadingThreadPool()
+            : threadPool (static_cast<std::size_t> (juce::SystemStats::getNumCpus())) {}
     };
+
+    static juce::SharedResourcePointer<SharedImageLoadingThreadPool> sharedThreadPool;
 
     BinaryAssetImageLoader::BinaryAssetImageLoader (const char* const* namedResourceListPtr,
         int numAssets,
         BinaryAssetUtilities::GetNamedResourceFunc getNamedResourcePtr,
         BinaryAssetUtilities::GetNamedResourceOriginalFilenameFunc getOriginalFilenamePtr)
         : BinaryAssetLoader (namedResourceListPtr, numAssets, getNamedResourcePtr, getOriginalFilenamePtr)
-        , impl (std::make_unique<Impl>())
     {
     }
 
@@ -31,7 +39,21 @@ namespace BogrenDigital::UILoading
             return {};
         }
 
-        return juce::ImageFileFormat::loadFrom (imageData, static_cast<size_t> (dataSize));
+        const auto hashCode = resourceName.hashCode64();
+
+        if (auto cachedImage = juce::ImageCache::getFromHashCode (hashCode); cachedImage.isValid())
+        {
+            return cachedImage;
+        }
+
+        auto image = juce::ImageFileFormat::loadFrom (imageData, static_cast<size_t> (dataSize));
+
+        if (image.isValid())
+        {
+            juce::ImageCache::addImageToCache (image, hashCode);
+        }
+
+        return image;
     }
 
     juce::Image BinaryAssetImageLoader::loadImageByFilename (const juce::String& filename) const
@@ -73,8 +95,7 @@ namespace BogrenDigital::UILoading
 
         for (int i = 0; i < numImages; ++i)
         {
-            impl->threadPool.detach_task ([this, &loadedImages, filename = filenames[i], index = i]
-            {
+            sharedThreadPool->threadPool.detach_task ([this, &loadedImages, filename = filenames[i], index = i] {
                 if (const auto image = loadImageByFilename (filename); image.isValid())
                 {
                     loadedImages[index] = std::move (image);
@@ -86,7 +107,7 @@ namespace BogrenDigital::UILoading
             });
         }
 
-        impl->threadPool.wait();
+        sharedThreadPool->threadPool.wait();
 
         for (auto& image : loadedImages)
         {

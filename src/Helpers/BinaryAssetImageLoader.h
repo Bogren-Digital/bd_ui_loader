@@ -90,14 +90,12 @@ namespace BogrenDigital::UILoading
          * @brief Core implementation that loads images from an array of filenames.
          *
          * Uses sequential loading for 10 or fewer images, parallel loading for more.
+         * Parallel loading uses a shared thread pool across all instances.
          *
          * @param filenames Array of complete filenames to load
          * @return An array of loaded images
          */
         [[nodiscard]] juce::OwnedArray<juce::Image> loadImageSequenceFromFilenames (
             const std::vector<juce::String>& filenames) const;
-
-        struct Impl;
-        std::unique_ptr<Impl> impl;
     };
 }
