@@ -7,9 +7,10 @@ A JUCE module for dynamically loading and managing UI components from XML metada
   - [Features](#features)
   - [Dependencies](#dependencies)
   - [Integration](#integration)
-    - [1. Basic Setup](#1-basic-setup)
-    - [2. Accessing Components by Name](#2-accessing-components-by-name)
-    - [3. Custom Resizing Behavior](#3-custom-resizing-behavior)
+    - [1. Basic Setup (BinaryData)](#1-basic-setup-binarydata)
+    - [2. Basic Setup (Filesystem)](#2-basic-setup-filesystem)
+    - [3. Accessing Components by Name](#3-accessing-components-by-name)
+    - [4. Custom Resizing Behavior](#4-custom-resizing-behavior)
   - [XML Metadata Format](#xml-metadata-format)
     - [Supported Component Types](#supported-component-types)
   - [Creating Custom Components](#creating-custom-components)
@@ -33,6 +34,7 @@ A JUCE module for dynamically loading and managing UI components from XML metada
 - **Aspect ratio preservation** - Parent component maintains bitmap aspect ratio during resizing
 - **Component factory system** - Extensible architecture for custom component types
 - **Binary asset integration** - Load images directly from JUCE's BinaryData
+- **Filesystem asset loading** - Load images from a directory on disk (e.g. `/Library/Application Support/`)
 - **Built-in component types** - Knobs, switches, buttons, images, combo boxes, and more
 
 ## Dependencies
@@ -46,7 +48,7 @@ This library includes [BS::thread_pool](https://github.com/bshoshany/thread-pool
 
 ## Integration
 
-### 1. Basic Setup
+### 1. Basic Setup (BinaryData)
 
 ```cpp
 #include <bd_ui_loader/bd_ui_loader.h>
@@ -88,7 +90,51 @@ private:
 };
 ```
 
-### 2. Accessing Components by Name
+### 2. Basic Setup (Filesystem)
+
+Load UI assets from a directory on disk instead of embedded BinaryData. This is useful when assets are installed separately (e.g. via a macOS `.pkg` installer to `/Library/Application Support/`), significantly reducing plugin binary size.
+
+```cpp
+#include <bd_ui_loader/bd_ui_loader.h>
+
+class MyPluginEditor : public juce::AudioProcessorEditor
+{
+public:
+    MyPluginEditor(MyAudioProcessor& processor)
+        : AudioProcessorEditor(processor)
+        , imageLoader(juce::File("/Library/Application Support/MyCompany/MyPlugin/UI"))
+    {
+        addAndMakeVisible(uiContainer);
+
+        // UILoader works identically regardless of asset source
+        uiLoader = std::make_unique<BogrenDigital::UILoading::UILoader>(uiContainer, imageLoader);
+        uiLoader->loadUI("ui_metadata.xml");
+
+        setSize(uiContainer.getWidth(), uiContainer.getHeight());
+    }
+
+    void resized() override
+    {
+        uiContainer.setBounds(getLocalBounds());
+        uiLoader->applyLayout();
+    }
+
+private:
+    juce::Component uiContainer;
+    BogrenDigital::UILoading::FileAssetImageLoader imageLoader;
+    std::unique_ptr<BogrenDigital::UILoading::UILoader> uiLoader;
+};
+```
+
+Alternatively, you can pass a `juce::File` directly to UILoader and skip constructing the loader yourself:
+
+```cpp
+uiLoader = std::make_unique<BogrenDigital::UILoading::UILoader>(
+    uiContainer,
+    juce::File("/Library/Application Support/MyCompany/MyPlugin/UI"));
+```
+
+### 3. Accessing Components by Name
 
 ```cpp
 // Get a component by name from the loaded UI
@@ -111,7 +157,7 @@ for (const auto& [name, component] : uiLoader->getComponentsByName())
 }
 ```
 
-### 3. Custom Resizing Behavior
+### 4. Custom Resizing Behavior
 
 ```cpp
 class MyPluginEditor : public juce::AudioProcessorEditor
@@ -232,7 +278,7 @@ namespace BogrenDigital::UILoading
     class MyCustomComponentFactory : public ComponentFactory
     {
     public:
-        MyCustomComponentFactory(BinaryAssetImageLoader& imgLoader)
+        MyCustomComponentFactory(ImageLoader& imgLoader)
             : ComponentFactory(imgLoader)
         {
         }
