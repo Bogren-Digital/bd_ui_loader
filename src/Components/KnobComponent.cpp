@@ -17,7 +17,11 @@ namespace BogrenDigital::UILoading
         {
             const auto normalizedValue = (getValue() - getMinimum()) / (getMaximum() - getMinimum());
             const auto imageIndex = static_cast<int> (normalizedValue * (images.size() - 1));
-            drawImage (g, imageIndex);
+
+            if (scaledImageSet != nullptr)
+                scaledImageSet->drawImage (g, imageIndex, *this);
+            else
+                drawImage (g, imageIndex);
         }
         else
         {
