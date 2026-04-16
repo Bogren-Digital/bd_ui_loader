@@ -7,7 +7,7 @@ namespace BogrenDigital::UILoading
     class ComponentFactory;
     class ComponentFactoryRegistry;
 
-    struct BinaryAssetImageLoader;
+    struct ImageLoader;
 
     /**
      * @brief Main UI loading and layout management system.
@@ -19,7 +19,8 @@ namespace BogrenDigital::UILoading
     class UILoader
     {
     public:
-        UILoader(juce::Component& parentComponent, BogrenDigital::UILoading::BinaryAssetImageLoader& imageLoader);
+        UILoader(juce::Component& parentComponent, ImageLoader& imageLoader);
+        UILoader(juce::Component& parentComponent, const juce::File& assetDirectory);
         ~UILoader();
 
         /**
@@ -142,7 +143,7 @@ namespace BogrenDigital::UILoading
             }
         };
 
-        BogrenDigital::UILoading::BinaryAssetImageLoader& getImageLoader() { return imageLoader; }
+        ImageLoader& getImageLoader() { return imageLoader; }
 
         ComponentFactoryRegistry& getComponentFactoryRegistry() { return *componentFactoryRegistry; }
 
@@ -168,7 +169,8 @@ namespace BogrenDigital::UILoading
             const juce::Rectangle<float>& componentSourceBounds);
 
         juce::Component& parentComponent;
-        BogrenDigital::UILoading::BinaryAssetImageLoader& imageLoader;
+        std::unique_ptr<ImageLoader> ownedImageLoader;
+        ImageLoader& imageLoader;
         juce::OwnedArray<juce::Component> components;
         std::unordered_map<juce::String, juce::Component*> componentsByName;
 
