@@ -47,8 +47,10 @@ namespace BogrenDigital::UILoading
             STRING_FIELD(type, "") \
             STRING_FIELD(name, "") \
             STRING_FIELD(file, "") \
+            STRING_FIELD(file2x, "") \
             STRING_FIELD(fileNamePrefix, "") \
             STRING_FIELD(fileNameSuffix, "") \
+            STRING_FIELD(fileNameSuffix2x, "") \
             STRING_FIELD(imageType, "") \
             STRING_FIELD(hitboxMask, "") \
             INT_FIELD(x, 0) \
@@ -93,6 +95,8 @@ namespace BogrenDigital::UILoading
             ComponentMetadata& withHitboxMask(const juce::String& hm) { hitboxMask = hm; return *this; }
             ComponentMetadata& withFileNamePrefix(const juce::String& fnp) { fileNamePrefix = fnp; return *this; }
             ComponentMetadata& withFileNameSuffix(const juce::String& fns) { fileNameSuffix = fns; return *this; }
+            ComponentMetadata& withFile2x(const juce::String& f) { file2x = f; return *this; }
+            ComponentMetadata& withFileNameSuffix2x(const juce::String& fns) { fileNameSuffix2x = fns; return *this; }
             ComponentMetadata& withNumberOfFrames(int nof) { numberOfFrames = nof; return *this; }
             ComponentMetadata& withMinX(int value) { minX = value; return *this; }
             ComponentMetadata& withMinY(int value) { minY = value; return *this; }
