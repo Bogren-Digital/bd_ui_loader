@@ -8,10 +8,12 @@ namespace BogrenDigital::UILoading
     public:
         SwitchLookAndFeel() = default;
         void setImages (juce::OwnedArray<juce::Image>* imgs) { images = imgs; }
+        void setScaledImageSet (ScaledImageSet* set) { scaledImages = set; }
         void drawToggleButton (juce::Graphics& g, juce::ToggleButton& button, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
 
     protected:
         juce::OwnedArray<juce::Image>* images = nullptr;
+        ScaledImageSet* scaledImages = nullptr;
     };
 
     template <typename T>
@@ -52,6 +54,12 @@ namespace BogrenDigital::UILoading
             return HitBoxMaskTester::hitTest (*this, x, y, hitboxMask);
         }
 
+        void setScaledImageSet (std::unique_ptr<ScaledImageSet> set)
+        {
+            scaledImageSet = std::move (set);
+            switchLookAndFeel.setScaledImageSet (scaledImageSet.get());
+        }
+
         void mouseUp (const juce::MouseEvent& e) override
         {
             // Block clicks if Ctrl+Cmd is held (Pro Tools getControlParameterIndex query)
@@ -64,6 +72,7 @@ namespace BogrenDigital::UILoading
     private:
         juce::Image hitboxMask;
         LookAndFeelType switchLookAndFeel;
+        std::unique_ptr<ScaledImageSet> scaledImageSet;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SwitchComponent)
     };

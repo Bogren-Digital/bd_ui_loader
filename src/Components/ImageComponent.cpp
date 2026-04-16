@@ -12,7 +12,10 @@ namespace BogrenDigital::UILoading
     {
         if (images.size() > 0)
         {
-            drawImage (g, 0);
+            if (scaledImageSet != nullptr)
+                scaledImageSet->drawImage (g, 0, *this);
+            else
+                drawImage (g, 0);
         }
         else
         {

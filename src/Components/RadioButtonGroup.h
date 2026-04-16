@@ -33,11 +33,14 @@ namespace BogrenDigital::UILoading
 
         bool hitTest (int x, int y) override;
 
+        void setScaledImageSet (std::unique_ptr<ScaledImageSet> set) { scaledImageSet = std::move (set); }
+
     private:
         juce::Image hitboxMask;
         InvisibleToggleLookAndFeel invisibleLookAndFeel;
         juce::OwnedArray<juce::ToggleButton> buttons;
         int selectedButtonIndex = -1;
+        std::unique_ptr<ScaledImageSet> scaledImageSet;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RadioButtonGroup)
     };

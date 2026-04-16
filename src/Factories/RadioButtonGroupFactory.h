@@ -36,7 +36,16 @@ public:
                 hitboxMask = imageLoader.loadImageByFilename(metadata.hitboxMask);
             }
 
-            component = new RadioButtonGroup(metadata.name, buttonImages, metadata, maskImage, hitboxMask);
+            auto* group = new RadioButtonGroup(metadata.name, buttonImages, metadata, maskImage, hitboxMask);
+
+            if (metadata.fileNameSuffix2x.isNotEmpty())
+            {
+                auto images1x = imageLoader.loadImageSequence(metadata.fileNamePrefix, frameIndices, metadata.fileNameSuffix);
+                auto images2x = imageLoader.loadImageSequence(metadata.fileNamePrefix, frameIndices, metadata.fileNameSuffix2x);
+                group->setScaledImageSet (std::make_unique<ScaledImageSet> (images1x, images2x));
+            }
+
+            component = group;
         }
         else
         {

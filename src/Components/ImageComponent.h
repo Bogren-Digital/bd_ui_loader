@@ -17,7 +17,10 @@ namespace BogrenDigital::UILoading
         void paint (juce::Graphics& g) override;
         bool hitTest (int x, int y) override;
 
+        void setScaledImageSet (std::unique_ptr<ScaledImageSet> set) { scaledImageSet = std::move (set); }
+
     private:
+        std::unique_ptr<ScaledImageSet> scaledImageSet;
         juce::Image hitboxMask;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImageComponent)
     };

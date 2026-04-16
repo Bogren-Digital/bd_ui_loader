@@ -35,6 +35,13 @@ namespace BogrenDigital::UILoading
                 {
                     knob->setRange(0.0, 1.0);
                     knob->setValue(0.5, juce::dontSendNotification);
+
+                    if (metadata.fileNameSuffix2x.isNotEmpty())
+                    {
+                        auto images1x = imageLoader.loadImageSequence(metadata.fileNamePrefix, metadata.numberOfFrames, metadata.fileNameSuffix);
+                        auto images2x = imageLoader.loadImageSequence(metadata.fileNamePrefix, metadata.numberOfFrames, metadata.fileNameSuffix2x);
+                        knob->setScaledImageSet (std::make_unique<ScaledImageSet> (images1x, images2x));
+                    }
                 }
             }
             else

@@ -26,7 +26,16 @@ public:
             hitboxMask = imageLoader.loadImageByFilename(metadata.hitboxMask);
         }
 
-        return new ImageComponent(metadata.name, image, metadata, maskImage, hitboxMask);
+        auto* comp = new ImageComponent(metadata.name, image, metadata, maskImage, hitboxMask);
+
+        if (metadata.file2x.isNotEmpty())
+        {
+            juce::Image image1x = imageLoader.loadImageByFilename(metadata.file);
+            juce::Image image2x = imageLoader.loadImageByFilename(metadata.file2x);
+            comp->setScaledImageSet (std::make_unique<ScaledImageSet> (image1x, image2x));
+        }
+
+        return comp;
     }
 };
 
