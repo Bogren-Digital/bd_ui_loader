@@ -7,7 +7,7 @@ namespace BogrenDigital::UILoading
 class SwitchFactory : public ComponentFactory
 {
 public:
-    SwitchFactory(BinaryAssetImageLoader& imgLoader)
+    SwitchFactory(ImageLoader& imgLoader)
         : ComponentFactory(imgLoader)
     {
     }

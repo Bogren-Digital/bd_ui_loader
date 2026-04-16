@@ -6,7 +6,7 @@ namespace BogrenDigital::UILoading
 class PlaceholderComponentFactory : public ComponentFactory
 {
 public:
-    explicit PlaceholderComponentFactory(BinaryAssetImageLoader& imgLoader)
+    explicit PlaceholderComponentFactory(ImageLoader& imgLoader)
         : ComponentFactory(imgLoader)
     {
     }

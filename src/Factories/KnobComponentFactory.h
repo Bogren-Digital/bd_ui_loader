@@ -7,7 +7,7 @@ namespace BogrenDigital::UILoading
     class KnobComponentFactory : public ComponentFactory
     {
     public:
-        KnobComponentFactory(BinaryAssetImageLoader& imgLoader)
+        KnobComponentFactory(ImageLoader& imgLoader)
             : ComponentFactory(imgLoader)
         {
         }

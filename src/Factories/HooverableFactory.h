@@ -6,7 +6,7 @@ namespace BogrenDigital::UILoading {
 class HooverableFactory : public ComponentFactory
 {
 public:
-    explicit HooverableFactory(BinaryAssetImageLoader& imgLoader)
+    explicit HooverableFactory(ImageLoader& imgLoader)
         : ComponentFactory(imgLoader)
     {
     }

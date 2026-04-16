@@ -5,7 +5,7 @@ namespace BogrenDigital::UILoading {
 class ComboBoxFactory : public ComponentFactory
 {
 public:
-    explicit ComboBoxFactory(BinaryAssetImageLoader& imgLoader)
+    explicit ComboBoxFactory(ImageLoader& imgLoader)
         : ComponentFactory(imgLoader)
     {
     }
