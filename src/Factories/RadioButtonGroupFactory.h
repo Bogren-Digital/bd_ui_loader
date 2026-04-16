@@ -7,7 +7,7 @@ namespace BogrenDigital::UILoading
 class RadioButtonGroupFactory : public ComponentFactory
 {
 public:
-    explicit RadioButtonGroupFactory(BinaryAssetImageLoader& imgLoader)
+    explicit RadioButtonGroupFactory(ImageLoader& imgLoader)
         : ComponentFactory(imgLoader)
     {
     }

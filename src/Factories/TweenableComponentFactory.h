@@ -7,7 +7,7 @@ namespace BogrenDigital::UILoading
 class TweenableComponentFactory : public ComponentFactory
 {
 public:
-    explicit TweenableComponentFactory(BinaryAssetImageLoader& imgLoader, UILoader& loader)
+    explicit TweenableComponentFactory(ImageLoader& imgLoader, UILoader& loader)
         : ComponentFactory(imgLoader)
         , uiLoader(loader)
     {

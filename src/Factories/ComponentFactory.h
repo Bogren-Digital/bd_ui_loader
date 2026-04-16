@@ -2,7 +2,7 @@
 
 namespace BogrenDigital::UILoading {
 
-struct BinaryAssetImageLoader;
+struct ImageLoader;
 
 /**
  * @brief Base interface for component factories.
@@ -14,7 +14,7 @@ struct BinaryAssetImageLoader;
 class ComponentFactory
 {
 public:
-    ComponentFactory(BinaryAssetImageLoader& imageLoader)
+    ComponentFactory(ImageLoader& imageLoader)
         : imageLoader(imageLoader)
     {
     }
@@ -22,7 +22,7 @@ public:
     virtual ~ComponentFactory() = default;
     virtual juce::Component* createComponent(const UILoader::ComponentMetadata& metadata) = 0;
 protected:
-    BinaryAssetImageLoader& imageLoader;
+    ImageLoader& imageLoader;
 };
 
 } // namespace BogrenDigital::UILoading

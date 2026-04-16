@@ -20,7 +20,9 @@ END_JUCE_MODULE_DECLARATION
 
 #include "src/UILoader.h"
 
+#include "src/Helpers/ImageLoader.h"
 #include "src/Helpers/BinaryAssetImageLoader.h"
+#include "src/Helpers/FileAssetImageLoader.h"
 #include "src/Helpers/HitBoxMaskTester.h"
 
 #include "src/Components/ComboBox.h"

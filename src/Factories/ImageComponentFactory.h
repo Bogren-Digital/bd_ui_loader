@@ -6,7 +6,7 @@ namespace BogrenDigital::UILoading {
 class ImageComponentFactory : public ComponentFactory
 {
 public:
-    ImageComponentFactory(BinaryAssetImageLoader& imgLoader)
+    ImageComponentFactory(ImageLoader& imgLoader)
         : ComponentFactory(imgLoader)
     {
     }

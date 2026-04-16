@@ -28,4 +28,5 @@
 #include "src/Factories/SwitchFactory.cpp"
 #include "src/Factories/TweenableComponentFactory.cpp"
 #include "src/Helpers/BinaryAssetImageLoader.cpp"
+#include "src/Helpers/FileAssetImageLoader.cpp"
 #include "src/UILoader.cpp"

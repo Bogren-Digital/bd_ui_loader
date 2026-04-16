@@ -39,8 +39,17 @@ namespace BogrenDigital::UILoading
         }
     }
 
-    UILoader::UILoader (juce::Component& parent, BinaryAssetImageLoader& imgLoader)
+    UILoader::UILoader (juce::Component& parent, ImageLoader& imgLoader)
         : parentComponent (parent), imageLoader (imgLoader), componentFactoryRegistry (std::make_unique<ComponentFactoryRegistry>())
+    {
+        registerComponentFactories();
+    }
+
+    UILoader::UILoader (juce::Component& parent, const juce::File& assetDirectory)
+        : parentComponent (parent),
+          ownedImageLoader (std::make_unique<FileAssetImageLoader> (assetDirectory)),
+          imageLoader (*ownedImageLoader),
+          componentFactoryRegistry (std::make_unique<ComponentFactoryRegistry>())
     {
         registerComponentFactories();
     }
