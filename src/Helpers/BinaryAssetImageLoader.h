@@ -8,7 +8,7 @@ namespace BogrenDigital::UILoading
      * Inherits from BinaryAssetLoader to reuse core binary resource iteration logic.
      * Provides methods to load individual images or iterate through image collections.
      */
-    struct BinaryAssetImageLoader : public BinaryAssetUtilities::BinaryAssetLoader
+    struct BinaryAssetImageLoader : public BinaryAssetUtilities::BinaryAssetLoader, public ImageLoader
     {
         /**
          * @param namedResourceList Array of resource names
@@ -42,7 +42,7 @@ namespace BogrenDigital::UILoading
          * @param filename The original filename (e.g., "Background.png")
          * @return The loaded image, or an empty image if not found
          */
-        [[nodiscard]] juce::Image loadImageByFilename (const juce::String& filename) const;
+        [[nodiscard]] juce::Image loadImageByFilename (const juce::String& filename) const override;
 
         /**
          * @brief Loads multiple images matching a pattern.
@@ -57,7 +57,7 @@ namespace BogrenDigital::UILoading
         [[nodiscard]] juce::OwnedArray<juce::Image> loadImageSequence (
             const juce::String& filePrefix,
             const juce::Array<int>& fileIndices,
-            const juce::String& fileSuffix) const;
+            const juce::String& fileSuffix) const override;
 
         /**
          * @brief Loads multiple images matching a pattern with sequential numbering.
@@ -70,7 +70,7 @@ namespace BogrenDigital::UILoading
         [[nodiscard]] juce::OwnedArray<juce::Image> loadImageSequence (
             const juce::String& filePrefix,
             int numberOfFrames,
-            const juce::String& fileSuffix) const;
+            const juce::String& fileSuffix) const override;
 
         /**
          * @brief Loads multiple images using specific filenames.
@@ -83,7 +83,12 @@ namespace BogrenDigital::UILoading
         [[nodiscard]] juce::OwnedArray<juce::Image> loadImageSequence (
             const juce::String& filePrefix,
             const juce::Array<juce::String>& fileNames,
-            const juce::String& fileSuffix) const;
+            const juce::String& fileSuffix) const override;
+
+        [[nodiscard]] juce::String getStringFromAsset (const juce::String& filename) const override
+        {
+            return BinaryAssetUtilities::BinaryAssetLoader::getStringFromAsset (filename);
+        }
 
     private:
         /**
