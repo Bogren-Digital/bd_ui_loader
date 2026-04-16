@@ -60,15 +60,16 @@ void RadioButtonGroup::resized()
 
 void RadioButtonGroup::paint(juce::Graphics& g)
 {
-    // Draw the image corresponding to the currently selected button
     if (selectedButtonIndex >= 0 && selectedButtonIndex < images.size() &&
         images[selectedButtonIndex] != nullptr && images[selectedButtonIndex]->isValid())
     {
-        drawImage(g, selectedButtonIndex);
+        if (scaledImageSet != nullptr)
+            scaledImageSet->drawImage (g, selectedButtonIndex, *this);
+        else
+            drawImage(g, selectedButtonIndex);
     }
     else
     {
-        // Fallback if no valid image
         g.fillAll(juce::Colours::darkgrey.withAlpha(0.3f));
         g.setColour(juce::Colours::white);
         g.drawText("RadioButtonGroup: " + getName(), getLocalBounds(),
