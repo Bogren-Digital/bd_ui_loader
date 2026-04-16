@@ -24,6 +24,7 @@ END_JUCE_MODULE_DECLARATION
 #include "src/Helpers/BinaryAssetImageLoader.h"
 #include "src/Helpers/FileAssetImageLoader.h"
 #include "src/Helpers/HitBoxMaskTester.h"
+#include "src/Helpers/ScaledImageSet.h"
 
 #include "src/Components/ComboBox.h"
 #include "src/Components/HooverableSwitchComponent.h"
