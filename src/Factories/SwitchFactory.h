@@ -29,7 +29,16 @@ public:
                 hitboxMask = imageLoader.loadImageByFilename(metadata.hitboxMask);
             }
 
-            component = new SwitchComponent(metadata.name, buttonImages, metadata, maskImage, hitboxMask);
+            auto* switchComp = new SwitchComponent(metadata.name, buttonImages, metadata, maskImage, hitboxMask);
+
+            if (metadata.fileNameSuffix2x.isNotEmpty())
+            {
+                auto images1x = imageLoader.loadImageSequence(metadata.fileNamePrefix, metadata.numberOfFrames, metadata.fileNameSuffix);
+                auto images2x = imageLoader.loadImageSequence(metadata.fileNamePrefix, metadata.numberOfFrames, metadata.fileNameSuffix2x);
+                switchComp->setScaledImageSet (std::make_unique<ScaledImageSet> (images1x, images2x));
+            }
+
+            component = switchComp;
         }
         else
         {
