@@ -129,6 +129,44 @@ TEST_CASE ("PackedAssetImageLoader loadImageSequence builds prefix+index+suffix 
     REQUIRE (byNames[1]->isValid());
 }
 
+TEST_CASE ("PackedAssetImageLoader loadImageSequence drops missing frames")
+{
+    // Mirror the sibling ImageLoaders: missing entries are NOT added, so the
+    // returned array size equals the count of PRESENT valid frames, not the
+    // requested count. Consumers (e.g. KnobComponentFactory) rely on .size()
+    // to decide frame count / @2x fallback.
+    const int w = 8, h = 4;
+    std::vector<pt::packedassets::InputEntry> entries {
+        { "Knob_0.png", encodePng (w, h) },
+        { "Knob_2.png", encodePng (w, h) }
+        // Knob_1.png deliberately absent.
+    };
+
+    PackedAssetImageLoader loader (buildSource (entries));
+
+    // Request 3 frames; only 2 are present -> size must be 2.
+    auto byCount = loader.loadImageSequence ("Knob_", 3, ".png");
+    REQUIRE (byCount.size() == 2);
+    for (auto* img : byCount)
+    {
+        REQUIRE (img->isValid());
+    }
+
+    // Indices including a missing one drop it.
+    juce::Array<int> indices { 0, 1, 2 };
+    auto byIndices = loader.loadImageSequence ("Knob_", indices, ".png");
+    REQUIRE (byIndices.size() == 2);
+
+    // Names including a missing one drop it.
+    juce::Array<juce::String> names { "0", "1", "2" };
+    auto byNames = loader.loadImageSequence ("Knob_", names, ".png");
+    REQUIRE (byNames.size() == 2);
+
+    // A fully-missing sequence yields an empty array (size 0).
+    auto allMissing = loader.loadImageSequence ("NoSuchKnob_", 5, ".png");
+    REQUIRE (allMissing.isEmpty());
+}
+
 TEST_CASE ("PackedAssetImageLoader tolerates a null source")
 {
     PackedAssetImageLoader loader (nullptr);

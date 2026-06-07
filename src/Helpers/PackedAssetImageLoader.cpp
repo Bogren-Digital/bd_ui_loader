@@ -42,7 +42,10 @@ namespace BogrenDigital::UILoading
 
         for (int i = 0; i < numberOfFrames; ++i)
         {
-            images.add (new juce::Image (loadOne (filePrefix + juce::String (i) + fileSuffix)));
+            if (auto image = loadOne (filePrefix + juce::String (i) + fileSuffix); image.isValid())
+            {
+                images.add (new juce::Image (std::move (image)));
+            }
         }
 
         return images;
@@ -57,7 +60,10 @@ namespace BogrenDigital::UILoading
 
         for (const auto index : fileIndices)
         {
-            images.add (new juce::Image (loadOne (filePrefix + juce::String (index) + fileSuffix)));
+            if (auto image = loadOne (filePrefix + juce::String (index) + fileSuffix); image.isValid())
+            {
+                images.add (new juce::Image (std::move (image)));
+            }
         }
 
         return images;
@@ -72,7 +78,10 @@ namespace BogrenDigital::UILoading
 
         for (const auto& fileName : fileNames)
         {
-            images.add (new juce::Image (loadOne (filePrefix + fileName + fileSuffix)));
+            if (auto image = loadOne (filePrefix + fileName + fileSuffix); image.isValid())
+            {
+                images.add (new juce::Image (std::move (image)));
+            }
         }
 
         return images;

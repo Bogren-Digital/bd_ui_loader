@@ -18,6 +18,10 @@ namespace BogrenDigital::UILoading
      */
     struct PackedAssetImageLoader : public ImageLoader
     {
+        /// NOTE: PackedAssetSource holds a NON-owning std::span over the pak bytes,
+        /// so the buffer behind `src`'s span must outlive this loader. The production
+        /// path (pt::packedassets::createDefaultSource()) maps with process-static
+        /// lifetime and is safe; only callers wrapping a temporary pak need care.
         explicit PackedAssetImageLoader (std::shared_ptr<const pt::packedassets::PackedAssetSource> src);
         ~PackedAssetImageLoader() override;
 
