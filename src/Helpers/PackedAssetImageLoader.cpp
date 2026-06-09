@@ -10,22 +10,46 @@ namespace BogrenDigital::UILoading
 
     PackedAssetImageLoader::~PackedAssetImageLoader() = default;
 
-    juce::Image PackedAssetImageLoader::loadOne (const juce::String& filename) const
+    std::optional<std::vector<uint8_t>> PackedAssetImageLoader::fetchBytes (const juce::String& filename) const
     {
         if (source == nullptr || filename.isEmpty())
         {
-            return {};
+            return std::nullopt;
         }
 
-        const auto bytes = source->getBytes (filename.toRawUTF8());
+        return source->getBytes (filename.toRawUTF8());
+    }
+
+    juce::Image PackedAssetImageLoader::loadOne (const juce::String& filename) const
+    {
+        // Memoize decoded images, like BinaryAssetImageLoader/FileAssetImageLoader.
+        // PackedAssetSource::getBytes re-decrypts on every call, and the UI
+        // factories load the same filmstrip 2-3x at construction, so without this
+        // each frame would be decrypted AND decoded repeatedly. Keyed on the
+        // ORIGINAL filename (the pak stores originals verbatim).
+        const auto hashCode = filename.hashCode64();
+
+        if (auto cached = juce::ImageCache::getFromHashCode (hashCode); cached.isValid())
+        {
+            return cached;
+        }
+
+        const auto bytes = fetchBytes (filename);
 
         if (! bytes)
         {
-            // Valid for optional resources like masks; mirror BinaryAssetImageLoader.
+            // Valid for optional resources like masks; matches the sibling loaders.
             return {};
         }
 
-        return juce::ImageFileFormat::loadFrom (bytes->data(), bytes->size());
+        auto image = juce::ImageFileFormat::loadFrom (bytes->data(), bytes->size());
+
+        if (image.isValid())
+        {
+            juce::ImageCache::addImageToCache (image, hashCode);
+        }
+
+        return image;
     }
 
     juce::Image PackedAssetImageLoader::loadImageByFilename (const juce::String& filename) const
@@ -89,12 +113,7 @@ namespace BogrenDigital::UILoading
 
     juce::String PackedAssetImageLoader::getStringFromAsset (const juce::String& filename) const
     {
-        if (source == nullptr || filename.isEmpty())
-        {
-            return {};
-        }
-
-        const auto bytes = source->getBytes (filename.toRawUTF8());
+        const auto bytes = fetchBytes (filename);
 
         if (! bytes)
         {

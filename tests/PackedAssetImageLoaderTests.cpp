@@ -135,17 +135,23 @@ TEST_CASE ("PackedAssetImageLoader loadImageSequence drops missing frames")
     // returned array size equals the count of PRESENT valid frames, not the
     // requested count. Consumers (e.g. KnobComponentFactory) rely on .size()
     // to decide frame count / @2x fallback.
+    //
+    // Use a prefix unique to this case: the loader memoizes into the global
+    // juce::ImageCache, so reusing another case's frame name (e.g. "Knob_1.png")
+    // would let the absent frame resolve from that cache and defeat the test.
+    // In production each knob filmstrip has a unique prefix and a genuinely
+    // missing frame is never cached, so drop semantics hold.
     const int w = 8, h = 4;
     std::vector<pt::packedassets::InputEntry> entries {
-        { "Knob_0.png", encodePng (w, h) },
-        { "Knob_2.png", encodePng (w, h) }
-        // Knob_1.png deliberately absent.
+        { "DropKnob_0.png", encodePng (w, h) },
+        { "DropKnob_2.png", encodePng (w, h) }
+        // DropKnob_1.png deliberately absent.
     };
 
     PackedAssetImageLoader loader (buildSource (entries));
 
     // Request 3 frames; only 2 are present -> size must be 2.
-    auto byCount = loader.loadImageSequence ("Knob_", 3, ".png");
+    auto byCount = loader.loadImageSequence ("DropKnob_", 3, ".png");
     REQUIRE (byCount.size() == 2);
     for (auto* img : byCount)
     {
@@ -154,12 +160,12 @@ TEST_CASE ("PackedAssetImageLoader loadImageSequence drops missing frames")
 
     // Indices including a missing one drop it.
     juce::Array<int> indices { 0, 1, 2 };
-    auto byIndices = loader.loadImageSequence ("Knob_", indices, ".png");
+    auto byIndices = loader.loadImageSequence ("DropKnob_", indices, ".png");
     REQUIRE (byIndices.size() == 2);
 
     // Names including a missing one drop it.
     juce::Array<juce::String> names { "0", "1", "2" };
-    auto byNames = loader.loadImageSequence ("Knob_", names, ".png");
+    auto byNames = loader.loadImageSequence ("DropKnob_", names, ".png");
     REQUIRE (byNames.size() == 2);
 
     // A fully-missing sequence yields an empty array (size 0).
@@ -172,4 +178,44 @@ TEST_CASE ("PackedAssetImageLoader tolerates a null source")
     PackedAssetImageLoader loader (nullptr);
     REQUIRE_FALSE (loader.loadImageByFilename ("x.png").isValid());
     REQUIRE (loader.getStringFromAsset ("x.xml").isEmpty());
+}
+
+TEST_CASE ("PackedAssetImageLoader memoizes decoded images in ImageCache")
+{
+    // Unique filename so the process-global juce::ImageCache can't collide with
+    // another case. getBytes re-decrypts each call, so the cache is what makes
+    // repeated loads of the same frame cheap.
+    const char* const name = "cachehit_unique.png";
+    const int w = 6, h = 6;
+    std::vector<pt::packedassets::InputEntry> entries { { name, encodePng (w, h) } };
+
+    PackedAssetImageLoader loader (buildSource (entries));
+
+    const auto first = loader.loadImageByFilename (name);
+    REQUIRE (first.isValid());
+
+    // The decoded image is now in the cache, keyed on the ORIGINAL filename.
+    REQUIRE (juce::ImageCache::getFromHashCode (juce::String (name).hashCode64()).isValid());
+
+    const auto second = loader.loadImageByFilename (name);
+    REQUIRE (second.isValid());
+    REQUIRE (second.getWidth() == w);
+    REQUIRE (second.getHeight() == h);
+}
+
+TEST_CASE ("PackedAssetImageLoader returns an invalid image for non-image bytes")
+{
+    const char* const name = "blob_unique.dat";
+    const std::vector<uint8_t> text { 'n', 'o', 't', ' ', 'a', ' ', 'p', 'n', 'g' };
+    std::vector<pt::packedassets::InputEntry> entries { { name, text } };
+
+    PackedAssetImageLoader loader (buildSource (entries));
+
+    // Bytes exist but aren't a decodable image -> invalid juce::Image,
+    REQUIRE_FALSE (loader.loadImageByFilename (name).isValid());
+    // and an undecodable blob must NOT be cached.
+    REQUIRE_FALSE (juce::ImageCache::getFromHashCode (juce::String (name).hashCode64()).isValid());
+
+    // The same bytes are still retrievable verbatim as a string.
+    REQUIRE (loader.getStringFromAsset (name) == juce::String ("not a png"));
 }

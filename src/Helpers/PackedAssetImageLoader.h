@@ -15,6 +15,12 @@ namespace BogrenDigital::UILoading
      * `filePrefix + index/name + fileSuffix`, looked up directly via
      * PackedAssetSource::getBytes. Missing assets yield an empty juce::Image
      * (mirroring BinaryAssetImageLoader's behaviour for optional resources).
+     *
+     * Decoded images are memoized via juce::ImageCache, keyed on the original
+     * filename's hashCode64() (matching BinaryAssetImageLoader/FileAssetImageLoader);
+     * this matters because PackedAssetSource::getBytes re-decrypts on every call.
+     * Unlike BinaryAssetImageLoader it does NOT parallelize large sequences across
+     * a thread pool yet (sequences decode serially) -- see the follow-up issue.
      */
     struct PackedAssetImageLoader : public ImageLoader
     {
@@ -46,6 +52,10 @@ namespace BogrenDigital::UILoading
 
     private:
         [[nodiscard]] juce::Image loadOne (const juce::String& filename) const;
+
+        // Shared guard + fetch used by loadOne and getStringFromAsset: returns
+        // nullopt for a null source / empty name, else the decrypted bytes.
+        [[nodiscard]] std::optional<std::vector<uint8_t>> fetchBytes (const juce::String& filename) const;
 
         std::shared_ptr<const pt::packedassets::PackedAssetSource> source;
     };
