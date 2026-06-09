@@ -53,6 +53,12 @@ namespace BogrenDigital::UILoading
     private:
         [[nodiscard]] juce::Image loadOne (const juce::String& filename) const;
 
+        // Decode a sequence by full filename, in parallel across a shared thread
+        // pool for >10 frames (matching BinaryAssetImageLoader). Invalid frames
+        // are dropped. The three public overloads build the names and delegate.
+        [[nodiscard]] juce::OwnedArray<juce::Image> loadImageSequenceFromFilenames (
+            const std::vector<juce::String>& filenames) const;
+
         // Shared guard + fetch used by loadOne and getStringFromAsset: returns
         // nullopt for a null source / empty name, else the decrypted bytes.
         [[nodiscard]] std::optional<std::vector<uint8_t>> fetchBytes (const juce::String& filename) const;

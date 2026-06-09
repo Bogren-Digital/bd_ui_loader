@@ -1,8 +1,26 @@
 #include "PackedAssetImageLoader.h"
 #if BD_UI_LOADER_HAS_PACKED_ASSETS
 
+#include "../../third_party/include/BS_thread_pool.hpp"
+#include <vector>
+
 namespace BogrenDigital::UILoading
 {
+    namespace
+    {
+        // Process-wide pool shared by all PackedAssetImageLoader instances for
+        // parallel sequence decode (mirrors BinaryAssetImageLoader's pool). Sized
+        // to the CPU count; without it large filmstrips decode serially on one
+        // core, which dominated cold-boot time vs the BinaryData path.
+        struct PackedImageLoadingThreadPool
+        {
+            BS::thread_pool<> threadPool;
+            PackedImageLoadingThreadPool()
+                : threadPool (static_cast<std::size_t> (juce::SystemStats::getNumCpus())) {}
+        };
+        juce::SharedResourcePointer<PackedImageLoadingThreadPool> packedImageThreadPool;
+    }
+
     PackedAssetImageLoader::PackedAssetImageLoader (std::shared_ptr<const pt::packedassets::PackedAssetSource> src)
         : source (std::move (src))
     {
@@ -57,22 +75,51 @@ namespace BogrenDigital::UILoading
         return loadOne (filename);
     }
 
+    juce::OwnedArray<juce::Image> PackedAssetImageLoader::loadImageSequenceFromFilenames (
+        const std::vector<juce::String>& filenames) const
+    {
+        juce::OwnedArray<juce::Image> images;
+        const int n = static_cast<int> (filenames.size());
+        if (n == 0)
+            return images;
+
+        // Small sequences: serial (the thread-pool dispatch isn't worth it).
+        if (n <= 10)
+        {
+            for (const auto& f : filenames)
+                if (auto image = loadOne (f); image.isValid())
+                    images.add (new juce::Image (std::move (image)));
+            return images;
+        }
+
+        // Large filmstrips: decode in parallel. loadOne is thread-safe -- getBytes
+        // decrypts fresh with no shared mutable state, and juce::ImageCache is
+        // internally synchronised.
+        std::vector<juce::Image> decoded (static_cast<size_t> (n));
+        for (int i = 0; i < n; ++i)
+            packedImageThreadPool->threadPool.detach_task ([this, &decoded, f = filenames[(size_t) i], i] {
+                if (auto image = loadOne (f); image.isValid())
+                    decoded[(size_t) i] = std::move (image);
+            });
+        packedImageThreadPool->threadPool.wait();
+
+        for (auto& image : decoded)
+            if (image.isValid())
+                images.add (new juce::Image (std::move (image)));
+
+        return images;
+    }
+
     juce::OwnedArray<juce::Image> PackedAssetImageLoader::loadImageSequence (
         const juce::String& filePrefix,
         int numberOfFrames,
         const juce::String& fileSuffix) const
     {
-        juce::OwnedArray<juce::Image> images;
-
+        std::vector<juce::String> filenames;
+        filenames.reserve (static_cast<size_t> (juce::jmax (0, numberOfFrames)));
         for (int i = 0; i < numberOfFrames; ++i)
-        {
-            if (auto image = loadOne (filePrefix + juce::String (i) + fileSuffix); image.isValid())
-            {
-                images.add (new juce::Image (std::move (image)));
-            }
-        }
-
-        return images;
+            filenames.push_back (filePrefix + juce::String (i) + fileSuffix);
+        return loadImageSequenceFromFilenames (filenames);
     }
 
     juce::OwnedArray<juce::Image> PackedAssetImageLoader::loadImageSequence (
@@ -80,17 +127,11 @@ namespace BogrenDigital::UILoading
         const juce::Array<int>& fileIndices,
         const juce::String& fileSuffix) const
     {
-        juce::OwnedArray<juce::Image> images;
-
+        std::vector<juce::String> filenames;
+        filenames.reserve (static_cast<size_t> (fileIndices.size()));
         for (const auto index : fileIndices)
-        {
-            if (auto image = loadOne (filePrefix + juce::String (index) + fileSuffix); image.isValid())
-            {
-                images.add (new juce::Image (std::move (image)));
-            }
-        }
-
-        return images;
+            filenames.push_back (filePrefix + juce::String (index) + fileSuffix);
+        return loadImageSequenceFromFilenames (filenames);
     }
 
     juce::OwnedArray<juce::Image> PackedAssetImageLoader::loadImageSequence (
@@ -98,17 +139,11 @@ namespace BogrenDigital::UILoading
         const juce::Array<juce::String>& fileNames,
         const juce::String& fileSuffix) const
     {
-        juce::OwnedArray<juce::Image> images;
-
+        std::vector<juce::String> filenames;
+        filenames.reserve (static_cast<size_t> (fileNames.size()));
         for (const auto& fileName : fileNames)
-        {
-            if (auto image = loadOne (filePrefix + fileName + fileSuffix); image.isValid())
-            {
-                images.add (new juce::Image (std::move (image)));
-            }
-        }
-
-        return images;
+            filenames.push_back (filePrefix + fileName + fileSuffix);
+        return loadImageSequenceFromFilenames (filenames);
     }
 
     juce::String PackedAssetImageLoader::getStringFromAsset (const juce::String& filename) const
