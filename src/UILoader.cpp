@@ -70,7 +70,7 @@ namespace BogrenDigital::UILoading
         applyLayout();
     }
 
-    UILoader::ComponentMetadata UILoader::parseElement (juce::XmlElement* element)
+    UILoader::ComponentMetadata UILoader::parseElement (const juce::XmlElement* element)
     {
         ComponentMetadata metadata;
 
@@ -113,29 +113,31 @@ namespace BogrenDigital::UILoading
 
             for (auto* element : xmlDocument->getChildIterator())
             {
-                const auto metadata = parseElement (element);
+                const auto name = element->getStringAttribute ("name", "");
 
-                if (componentsByName.contains (metadata.name))
+                if (componentsByName.contains (name))
                 {
                     jassertfalse; // Duplicate component name detected
-                    juce::Logger::writeToLog ("Duplicate component name detected: " + metadata.name + " - skipping component");
+                    juce::Logger::writeToLog ("Duplicate component name detected: " + name + " - skipping component");
                     continue;
                 }
 
-                if (auto* factory = componentFactoryRegistry->getFactory (metadata, this); factory != nullptr)
+                if (auto* factory = componentFactoryRegistry->getFactory (element, this); factory != nullptr)
                 {
-                    if (auto* component = factory->createComponent (metadata); component != nullptr)
+                    if (auto* component = factory->createComponent (element); component != nullptr)
                     {
                         parentComponent.addAndMakeVisible (component);
                         components.add (component);
-                        componentsByName[metadata.name] = component;
+                        componentsByName[name] = component;
+
+                        const auto metadata = parseElement (element);
                         applyMetadataToProperties (component, metadata);
                         applyLayoutToComponent (component);
                     }
                 }
                 else
                 {
-                    juce::Logger::writeToLog ("No factory found for component type: " + metadata.type);
+                    juce::Logger::writeToLog ("No factory found for component type: " + element->getTagName());
                 }
             }
         }

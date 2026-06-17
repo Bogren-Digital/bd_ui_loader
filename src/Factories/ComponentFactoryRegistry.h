@@ -36,14 +36,17 @@ public:
         };
     }
 
-    /** @brief Get or create a factory for the given component metadata. */
-    ComponentFactory* getFactory(const UILoader::ComponentMetadata& metadata, UILoader* loader)
+    /** @brief Get or create a factory for the given XML element. */
+    ComponentFactory* getFactory(const juce::XmlElement* element, UILoader* loader)
     {
-        auto specificKey = getKey(metadata.type, metadata.imageType);
+        auto type = element->getTagName();
+        auto imageType = element->getStringAttribute("imageType", "");
+
+        auto specificKey = getKey(type, imageType);
         auto it = factoryInstances.find(specificKey);
 
         if (it == factoryInstances.end()) {
-            auto generalKey = getKey(metadata.type, "");
+            auto generalKey = getKey(type, "");
             it = factoryInstances.find(generalKey);
         }
 
@@ -52,7 +55,7 @@ public:
 
         auto creatorIt = factories.find(specificKey);
         if (creatorIt == factories.end())
-            creatorIt = factories.find(getKey(metadata.type, ""));
+            creatorIt = factories.find(getKey(type, ""));
 
         if (creatorIt != factories.end()) {
             auto factory = creatorIt->second(loader);

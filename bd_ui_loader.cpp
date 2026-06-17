@@ -19,6 +19,7 @@
 #include "src/Components/TweenableComponent.cpp"
 
 #include "src/Factories/ComboBoxFactory.cpp"
+#include "src/Factories/ComponentFactory.cpp"
 #include "src/Factories/ComponentFactoryRegistry.cpp"
 #include "src/Factories/HooverableFactory.cpp"
 #include "src/Factories/ImageComponentFactory.cpp"

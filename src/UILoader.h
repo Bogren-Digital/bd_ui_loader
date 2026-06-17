@@ -162,9 +162,11 @@ namespace BogrenDigital::UILoading
         int getMetadataWidth() const { return bitmapLayout.width; }
         int getMetadataHeight() const { return bitmapLayout.height; }
 
+        /** @brief Parses flat ComponentMetadata fields from an XML element's attributes. */
+        static ComponentMetadata parseElement(const juce::XmlElement* element);
+
     private:
         void parseXML(const juce::String& xmlContent);
-        ComponentMetadata parseElement(juce::XmlElement* element);
 
         /** @brief Calculates transformed bounds for a component based on coordinate space mapping. */
         static juce::Rectangle<float> calculateTransformedBounds(
