@@ -53,6 +53,9 @@ namespace BogrenDigital::UILoading
             STRING_FIELD(fileNameSuffix2x, "") \
             STRING_FIELD(imageType, "") \
             STRING_FIELD(hitboxMask, "") \
+            STRING_FIELD(glowPrefix, "") \
+            STRING_FIELD(glowSuffix, "") \
+            STRING_FIELD(glowSuffix2x, "") \
             INT_FIELD(x, 0) \
             INT_FIELD(y, 0) \
             INT_FIELD(width, 0) \
@@ -61,7 +64,11 @@ namespace BogrenDigital::UILoading
             INT_FIELD(minX, 0) \
             INT_FIELD(minY, 0) \
             INT_FIELD(maxX, 0) \
-            INT_FIELD(maxY, 0)
+            INT_FIELD(maxY, 0) \
+            INT_FIELD(glowX, 0) \
+            INT_FIELD(glowY, 0) \
+            INT_FIELD(glowWidth, 0) \
+            INT_FIELD(glowHeight, 0)
 
         /**
          * @brief Metadata describing a UI component's properties.
